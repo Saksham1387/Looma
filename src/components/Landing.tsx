@@ -1,111 +1,207 @@
-import { Camera, Figma, FormInput, Layout, Plus, Upload } from "lucide-react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { Badge } from "@/components/ui/badge";
+import { LandingHeader } from "./landing-header";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Send } from "lucide-react";
 
-export const Landing = () => {
+export default function Landing() {
+  const [input, setInput] = useState("");
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.2,
+        duration: 0.8,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
+    },
+  };
+
+  const badgeVariants = {
+    hidden: { y: -20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 200,
+        damping: 20,
+      },
+    },
+  };
+
+  const promptBoxVariants = {
+    hidden: { scale: 0.95, opacity: 0 },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+        delay: 0.6,
+      },
+    },
+  };
+
+  const floatingBlob = {
+    animate: {
+      scale: [1, 1.1, 0.9, 1],
+      x: [0, 30, -20, 0],
+      y: [0, -50, 20, 0],
+      transition: {
+        duration: 7,
+        repeat: Infinity,
+        repeatType: "loop" as const,
+      },
+    },
+  };
+
+  const floatingBlobDelayed = {
+    animate: {
+      scale: [1, 0.9, 1.1, 1],
+      x: [0, -20, 30, 0],
+      y: [0, 20, -50, 0],
+      transition: {
+        duration: 7,
+        repeat: Infinity,
+        repeatType: "loop" as const,
+        delay: 2,
+      },
+    },
+  };
+
+  const pulseVariant = {
+    animate: {
+      scale: [1, 1.1, 1],
+      opacity: [1, 0.7, 1],
+      transition: {
+        duration: 2,
+        repeat: Infinity,
+        repeatType: "loop" as const,
+      },
+    },
+  };
+
+  const gradientVariant = {
+    animate: {
+      x: ["-100%", "100%"],
+      transition: {
+        duration: 8,
+        repeat: Infinity,
+        repeatType: "loop" as const,
+        ease: "linear",
+      },
+    },
+  };
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-black">
-      <main className="flex-1 p-4 md:p-6 space-y-8">
-        <div className="flex flex-col items-center justify-center space-y-4 text-center pt-12">
-          <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl text-white">
-            What can I help you ship?
-          </h1>
-          <div className="w-full max-w-xl mx-auto mt-8 bg-muted/50 rounded-lg p-4">
-            <div className="bg-background rounded-md p-4 mb-4">
-              <Input
-                placeholder="Ask v0 to build..."
-                className="border-0 shadow-none focus-visible:ring-0 px-0"
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Button variant="outline" size="sm">
-                  No project selected
-                  <span className="ml-1">▼</span>
-                </Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon">
-                  <span className="sr-only">Expand</span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-4 w-4"
-                  >
-                    <path d="M21 3 9 15" />
-                    <path d="M12 3H3v18h18v-9" />
-                    <path d="M16 3h5v5" />
-                  </svg>
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <span className="sr-only">Attach</span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-4 w-4"
-                  >
-                    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                  </svg>
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <span className="sr-only">Send</span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-4 w-4"
-                  >
-                    <path d="m22 2-7 20-4-9-9-4Z" />
-                    <path d="M22 2 11 13" />
-                  </svg>
-                </Button>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-wrap justify-center gap-2 mt-8">
-            <Button variant="outline" className="gap-2">
-              <Camera className="h-4 w-4" />
-              Clone a Screenshot
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <Figma className="h-4 w-4" />
-              Import from Figma
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <Upload className="h-4 w-4" />
-              Upload a Project
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <Layout className="h-4 w-4" />
-              Landing Page
-            </Button>
-            <Button variant="outline" className="gap-2">
-              <FormInput className="h-4 w-4" />
-              Sign Up Form
-            </Button>
-          </div>
+    <motion.main
+      className="min-h-screen bg-black"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      <div className="container mx-auto px-4 py-6">
+        <LandingHeader />
+
+        {/* Announcement Banner with animation */}
+        <div className="flex justify-center mb-14">
+          <motion.div variants={badgeVariants}>
+            <Badge
+              variant="outline"
+              className="py-2 px-4 border-gray-900 bg-gray-900/10 text-blue-200 flex items-center gap-2 rounded-full"
+            >
+              <motion.span
+                variants={pulseVariant}
+                animate="animate"
+                className="text-white"
+              >
+                ⚡
+              </motion.span>{" "}
+              Early Access
+            </Badge>
+          </motion.div>
         </div>
-      </main>
-    </div>
+
+        {/* Hero Section with animations */}
+        <div className="flex flex-col items-center justify-center text-center mb-16 ">
+          <motion.h2
+            variants={itemVariants}
+            className="text-3xl sm:text-6xl md:text-5xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-400 via-gray-500 to-gray-700"
+          >
+            Turn your thoughts into animations
+          </motion.h2>
+
+          <motion.p
+            variants={itemVariants}
+            className="text-md md:text-md text-gray-400 max-w-3xl mb-12"
+          >
+            Prompt, design, animate, and share stunning animations powered by AI
+            technology. Looma makes animation creation accessible to everyone.
+          </motion.p>
+
+          <motion.div
+            variants={promptBoxVariants}
+            className="relative w-full max-w-3xl rounded-xl overflow-hidden mb-12"
+          >
+            <div className="bg-gradient-to-r from-gray-900/20 to-gray-800/20 rounded-xl p-6 relative overflow-hidden">
+              {/* Animated background */}
+              <div className="absolute inset-0 opacity-30">
+                <motion.div
+                  variants={gradientVariant}
+                  animate="animate"
+                  className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-blue-600/0 via-gray-600/20 to-blue-600/0"
+                ></motion.div>
+
+                <motion.div
+                  variants={floatingBlob}
+                  animate="animate"
+                  className="absolute -top-32 -left-32 w-64 h-64 bg-gray-500/20 rounded-full blur-3xl"
+                ></motion.div>
+
+                <motion.div
+                  variants={floatingBlobDelayed}
+                  animate="animate"
+                  className="absolute -bottom-32 -right-32 w-64 h-64 bg-blue-700/20 rounded-full blur-3xl"
+                ></motion.div>
+              </div>
+              <div className="flex flex-row">
+                <textarea
+                  placeholder=""
+                  value={input}
+                  className="bg-transparent text-white w-full outline-none resize-none text-lg h-32 border-b border-blue-900/30 relative z-10 placeholder-gray-500"
+                  onChange={(e) => setInput(e.target.value)}
+                />
+                <Send className="text-white" />
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Footer with animation */}
+        <motion.footer
+          variants={itemVariants}
+          className="text-center text-gray-600 text-sm"
+        >
+          <p>© 2025 Looma. All rights reserved.</p>
+        </motion.footer>
+      </div>
+    </motion.main>
   );
-};
+}

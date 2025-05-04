@@ -3193,6 +3193,7 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     projectId: string | null
+    videoUrl: string | null
   }
 
   export type PromptMaxAggregateOutputType = {
@@ -3202,6 +3203,7 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     projectId: string | null
+    videoUrl: string | null
   }
 
   export type PromptCountAggregateOutputType = {
@@ -3211,6 +3213,7 @@ export namespace Prisma {
     createdAt: number
     updatedAt: number
     projectId: number
+    videoUrl: number
     _all: number
   }
 
@@ -3222,6 +3225,7 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     projectId?: true
+    videoUrl?: true
   }
 
   export type PromptMaxAggregateInputType = {
@@ -3231,6 +3235,7 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     projectId?: true
+    videoUrl?: true
   }
 
   export type PromptCountAggregateInputType = {
@@ -3240,6 +3245,7 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     projectId?: true
+    videoUrl?: true
     _all?: true
   }
 
@@ -3322,6 +3328,7 @@ export namespace Prisma {
     createdAt: Date
     updatedAt: Date
     projectId: string
+    videoUrl: string | null
     _count: PromptCountAggregateOutputType | null
     _min: PromptMinAggregateOutputType | null
     _max: PromptMaxAggregateOutputType | null
@@ -3348,6 +3355,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     projectId?: boolean
+    videoUrl?: boolean
     project?: boolean | ProjectDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["prompt"]>
 
@@ -3358,6 +3366,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     projectId?: boolean
+    videoUrl?: boolean
     project?: boolean | ProjectDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["prompt"]>
 
@@ -3368,6 +3377,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     projectId?: boolean
+    videoUrl?: boolean
     project?: boolean | ProjectDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["prompt"]>
 
@@ -3378,9 +3388,10 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     projectId?: boolean
+    videoUrl?: boolean
   }
 
-  export type PromptOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "value" | "type" | "createdAt" | "updatedAt" | "projectId", ExtArgs["result"]["prompt"]>
+  export type PromptOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "value" | "type" | "createdAt" | "updatedAt" | "projectId" | "videoUrl", ExtArgs["result"]["prompt"]>
   export type PromptInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     project?: boolean | ProjectDefaultArgs<ExtArgs>
   }
@@ -3403,6 +3414,7 @@ export namespace Prisma {
       createdAt: Date
       updatedAt: Date
       projectId: string
+      videoUrl: string | null
     }, ExtArgs["result"]["prompt"]>
     composites: {}
   }
@@ -3833,6 +3845,7 @@ export namespace Prisma {
     readonly createdAt: FieldRef<"Prompt", 'DateTime'>
     readonly updatedAt: FieldRef<"Prompt", 'DateTime'>
     readonly projectId: FieldRef<"Prompt", 'String'>
+    readonly videoUrl: FieldRef<"Prompt", 'String'>
   }
     
 
@@ -4290,7 +4303,8 @@ export namespace Prisma {
     type: 'type',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
-    projectId: 'projectId'
+    projectId: 'projectId',
+    videoUrl: 'videoUrl'
   };
 
   export type PromptScalarFieldEnum = (typeof PromptScalarFieldEnum)[keyof typeof PromptScalarFieldEnum]
@@ -4506,6 +4520,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Prompt"> | Date | string
     updatedAt?: DateTimeFilter<"Prompt"> | Date | string
     projectId?: StringFilter<"Prompt"> | string
+    videoUrl?: StringNullableFilter<"Prompt"> | string | null
     project?: XOR<ProjectScalarRelationFilter, ProjectWhereInput>
   }
 
@@ -4516,6 +4531,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     projectId?: SortOrder
+    videoUrl?: SortOrderInput | SortOrder
     project?: ProjectOrderByWithRelationInput
   }
 
@@ -4529,6 +4545,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Prompt"> | Date | string
     updatedAt?: DateTimeFilter<"Prompt"> | Date | string
     projectId?: StringFilter<"Prompt"> | string
+    videoUrl?: StringNullableFilter<"Prompt"> | string | null
     project?: XOR<ProjectScalarRelationFilter, ProjectWhereInput>
   }, "id">
 
@@ -4539,6 +4556,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     projectId?: SortOrder
+    videoUrl?: SortOrderInput | SortOrder
     _count?: PromptCountOrderByAggregateInput
     _max?: PromptMaxOrderByAggregateInput
     _min?: PromptMinOrderByAggregateInput
@@ -4554,6 +4572,7 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"Prompt"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Prompt"> | Date | string
     projectId?: StringWithAggregatesFilter<"Prompt"> | string
+    videoUrl?: StringNullableWithAggregatesFilter<"Prompt"> | string | null
   }
 
   export type UserCreateInput = {
@@ -4685,6 +4704,7 @@ export namespace Prisma {
     type: $Enums.PromptType
     createdAt?: Date | string
     updatedAt?: Date | string
+    videoUrl?: string | null
     project: ProjectCreateNestedOneWithoutPromptsInput
   }
 
@@ -4695,6 +4715,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     projectId: string
+    videoUrl?: string | null
   }
 
   export type PromptUpdateInput = {
@@ -4703,6 +4724,7 @@ export namespace Prisma {
     type?: EnumPromptTypeFieldUpdateOperationsInput | $Enums.PromptType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     project?: ProjectUpdateOneRequiredWithoutPromptsNestedInput
   }
 
@@ -4713,6 +4735,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     projectId?: StringFieldUpdateOperationsInput | string
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PromptCreateManyInput = {
@@ -4722,6 +4745,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     projectId: string
+    videoUrl?: string | null
   }
 
   export type PromptUpdateManyMutationInput = {
@@ -4730,6 +4754,7 @@ export namespace Prisma {
     type?: EnumPromptTypeFieldUpdateOperationsInput | $Enums.PromptType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PromptUncheckedUpdateManyInput = {
@@ -4739,6 +4764,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     projectId?: StringFieldUpdateOperationsInput | string
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -4917,6 +4943,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     projectId?: SortOrder
+    videoUrl?: SortOrder
   }
 
   export type PromptMaxOrderByAggregateInput = {
@@ -4926,6 +4953,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     projectId?: SortOrder
+    videoUrl?: SortOrder
   }
 
   export type PromptMinOrderByAggregateInput = {
@@ -4935,6 +4963,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     projectId?: SortOrder
+    videoUrl?: SortOrder
   }
 
   export type EnumPromptTypeWithAggregatesFilter<$PrismaModel = never> = {
@@ -5151,6 +5180,7 @@ export namespace Prisma {
     type: $Enums.PromptType
     createdAt?: Date | string
     updatedAt?: Date | string
+    videoUrl?: string | null
   }
 
   export type PromptUncheckedCreateWithoutProjectInput = {
@@ -5159,6 +5189,7 @@ export namespace Prisma {
     type: $Enums.PromptType
     createdAt?: Date | string
     updatedAt?: Date | string
+    videoUrl?: string | null
   }
 
   export type PromptCreateOrConnectWithoutProjectInput = {
@@ -5197,6 +5228,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Prompt"> | Date | string
     updatedAt?: DateTimeFilter<"Prompt"> | Date | string
     projectId?: StringFilter<"Prompt"> | string
+    videoUrl?: StringNullableFilter<"Prompt"> | string | null
   }
 
   export type ProjectCreateWithoutPromptsInput = {
@@ -5257,6 +5289,7 @@ export namespace Prisma {
     type: $Enums.PromptType
     createdAt?: Date | string
     updatedAt?: Date | string
+    videoUrl?: string | null
   }
 
   export type PromptUpdateWithoutProjectInput = {
@@ -5265,6 +5298,7 @@ export namespace Prisma {
     type?: EnumPromptTypeFieldUpdateOperationsInput | $Enums.PromptType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PromptUncheckedUpdateWithoutProjectInput = {
@@ -5273,6 +5307,7 @@ export namespace Prisma {
     type?: EnumPromptTypeFieldUpdateOperationsInput | $Enums.PromptType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PromptUncheckedUpdateManyWithoutProjectInput = {
@@ -5281,6 +5316,7 @@ export namespace Prisma {
     type?: EnumPromptTypeFieldUpdateOperationsInput | $Enums.PromptType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    videoUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
 

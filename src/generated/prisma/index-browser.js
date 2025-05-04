@@ -143,7 +143,8 @@ exports.Prisma.PromptScalarFieldEnum = {
   type: 'type',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  projectId: 'projectId'
+  projectId: 'projectId',
+  videoUrl: 'videoUrl'
 };
 
 exports.Prisma.SortOrder = {

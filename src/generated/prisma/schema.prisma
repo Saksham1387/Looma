@@ -46,4 +46,5 @@ model Prompt {
   updatedAt DateTime   @updatedAt
   project   Project    @relation(fields: [projectId], references: [id])
   projectId String
+  videoUrl  String?
 }
