@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth/auth";
 
 export const GET = async (
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
     const session = await getServerSession(authOptions);
@@ -14,7 +14,7 @@ export const GET = async (
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const projectId = params.id;
+    const {id:projectId} = await params;
 
     if (!projectId) {
       return NextResponse.json(

@@ -1,36 +1,139 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+![Collab Draw Banner](https://gold-legislative-tuna-190.mypinata.cloud/ipfs/bafybeicvxkdtg6srwve5igmi7vggitwfxprcl7l2x6xqabkv6vtoziimqq)
 
-First, run the development server:
+# Looma
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+**Looma** is a web application that lets you **generate stunning animations just by describing them in natural language**. Powered by [Manim](https://docs.manim.community/) under the hood, Looma translates your prompt into Python animation code, renders it using a backend worker, and delivers a playable video — all in one seamless flow.
+
+Built with **Next.js**, **FastAPI**, and **OpenAI**, Looma is your creative canvas for math, science, and educational visualizations — no coding required.
+
+---
+
+## ✨ Features
+
+* 🧠 **Prompt-to-Animation**: Describe your animation and get a rendered video
+* 🎬 **Manim Integration**: Uses Manim to create mathematically accurate visuals
+* ⚡ **FastAPI Worker**: A Python-based worker renders Manim code securely
+* 🔐 **Google OAuth**: Authenticate via your Google account
+* 🌐 **Next.js Frontend**: Smooth UI built with React and deployed via Next.js
+* 🧰 **Monorepo with `pnpm`**: Frontend and worker live together in one project
+
+---
+
+## 🗂️ Project Structure
+
+```
+Looma/
+├── src/                   # Next.js application (frontend)
+├── worker/                # Manim worker service (FastAPI)
+├── .env                   # Environment configuration
+├── pnpm-workspace.yaml    # Monorepo workspace config
+└── README.md              # You're reading it :)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ⚙️ Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env` file in the root with the following:
 
-## Learn More
+```env
+# Database
+DATABASE_URL=
+DIRECT_URL=
 
-To learn more about Next.js, take a look at the following resources:
+# Google OAuth
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# OpenAI API
+OPENAI_API_KEY=
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Auth
+NEXTAUTH_SECRET=secret
 
-## Deploy on Vercel
+# Manim Worker URL
+WORKER_URL="http://0.0.0.0:8000"
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🧱 Tech Stack
+
+* **Frontend**: Next.js 14, React, Tailwind CSS, NextAuth.js
+* **Backend Worker**: FastAPI, Manim (Python)
+* **Authentication**: Google OAuth
+* **AI Integration**: OpenAI (GPT for prompt → code generation)
+* **Package Manager**: `pnpm` (monorepo with workspace support)
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone and install dependencies
+
+```bash
+git clone https://github.com/yourusername/looma.git
+cd looma
+pnpm install
+```
+
+### 2. Set up the environment
+
+Create a `.env` file at the root using the example above.
+
+### 3. Run the Manim worker
+
+```bash
+cd packages/worker
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+### 4. Run the frontend
+
+```bash
+cd apps/web
+pnpm dev
+```
+
+---
+
+## 📤 How It Works
+
+1. User logs in via Google
+2. Enters a prompt like *“Show the Pythagorean theorem with colored triangles”*
+3. Prompt is sent to OpenAI to generate Manim Python code
+4. The code is sent to the FastAPI worker
+5. Worker renders video with Manim and returns a public URL
+6. Looma displays the video in the browser
+
+---
+
+## 🧪 Example Prompt
+
+> "Animate the expansion of (a + b)² using colored areas and labels."
+
+---
+
+## 🛠️ Future Ideas
+
+* User gallery and saved animations
+* More animation styles and themes
+* Real-time preview and scrubber
+* Audio narration support
+
+---
+
+## 🧑‍💻 Contributing
+
+Pull requests are welcome! Please open an issue first to discuss what you’d like to change.
+
+---
+
+## 🪄 License
+
+MIT License. See [`LICENSE`](./LICENSE) for details.
+
+---
+
+Let me know if you want badges, deployment instructions (e.g., Vercel + Docker), or architecture diagrams!

@@ -6,17 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import axios from "axios";
-import {
-  Send,
-  Loader2,
-  Film,
-  MessageSquare,
-  Info,
-  AlertCircle,
-  ChevronRight,
-  Clock,
-} from "lucide-react";
-import { useState, useEffect } from "react";
+import { Send, Loader2, Film, Info, ChevronRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ChatErrorCard } from "./chat-error-card";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
+import { LLMResponseLoading } from "./llm-response-loading";
+import { VideoCard } from "./video-card";
+import { ChatHeader } from "./chat-header";
+import { SystemResponse } from "./system-response";
+import { ChatLayoutCard } from "./chat-layout-card";
+import { Prompt } from "@/app/hooks/usePrompts";
+import { ChatLoading } from "./chat-loading";
 
 type Props = {
   id: string;
@@ -24,12 +25,33 @@ type Props = {
 
 const Chatpage = ({ id }: Props) => {
   const [loading, setLoading] = useState(false);
-  const [processingStage, setProcessingStage] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { prompts } = usePrompts(id);
+  const { prompts, refetchPrompts, addPrompt, isLoading: isPromptsLoading } = usePrompts(id);
   const [input, setInput] = useState("");
   const [progress, setProgress] = useState(0);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const { data: session } = useSession();
+  const [expandedCodeMap, setExpandedCodeMap] = useState<
+    Record<string, boolean>
+  >({});
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const promptFromUrl = urlParams.get("prompt");
+
+    if (promptFromUrl) {
+      setInput(promptFromUrl);
+      handleSendPrompt(promptFromUrl);
+
+      const newUrl =
+        window.location.pathname +
+        window.location.search.replace(/[?&]prompt=[^&]+(&|$)/, "");
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, []);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -57,35 +79,61 @@ const Chatpage = ({ id }: Props) => {
     };
   }, [loading, progress]);
 
-  const handleSendPrompt = async () => {
-    if (!input.trim()) return;
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      const isBottom = scrollHeight - scrollTop <= clientHeight + 100;
+      setIsAtBottom(isBottom);
+    }
+  };
+
+  useEffect(() => {
+    if (scrollRef.current && isAtBottom) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [prompts, loading, isAtBottom]);
+
+  const handleSendPrompt = async (promptValue?: string) => {
+    const promptToSend = promptValue || input;
+    if (!promptToSend.trim()) return;
 
     setLoading(true);
     setError(null);
     setVideoUrl(null);
 
-    try {
-      setProcessingStage("Sending prompt to AI...");
-      setProcessingStage("Processing video...");
+    const userPrompt: Prompt = {
+      id: Date.now().toString(),
+      value: promptToSend,
+      type: "USER",
+      createdAt: new Date().toISOString(),
+      videoUrl: "",
+    };
+    addPrompt(userPrompt);
 
+    try {
       const promptResponse = await axios.post(`/api/prompt`, {
-        prompt: input,
+        prompt: promptToSend,
         projectId: id,
       });
 
       const manimCode = promptResponse.data.code;
       setVideoUrl(promptResponse.data.url);
+
+      const systemPrompt: Prompt = {
+        id: (Date.now() + 1).toString(),
+        value: promptResponse.data.response || "Processing your request...",
+        type: "SYSTEM",
+        createdAt: new Date().toISOString(),
+        videoUrl: promptResponse.data.url || "",
+      };
+      addPrompt(systemPrompt);
+
       if (!manimCode) {
         throw new Error("No Manim code returned from /api/prompt");
       }
-
-      setProcessingStage("Generating animation with Manim...");
-
-      setProcessingStage("Video ready!");
-
-      setTimeout(() => {
-        setProcessingStage(null);
-      }, 1500);
     } catch (err) {
       console.error("Error:", err);
       setError(
@@ -97,6 +145,8 @@ const Chatpage = ({ id }: Props) => {
     } finally {
       setLoading(false);
       setInput("");
+
+      refetchPrompts();
     }
   };
 
@@ -106,205 +156,232 @@ const Chatpage = ({ id }: Props) => {
     }
   };
 
+  const handleChatClick = (promptId: string, promptVideoUrl: string) => {
+    setSelectedChatId(promptId);
+    setVideoUrl(promptVideoUrl);
+    refetchPrompts();
+  };
+
   return (
-    <div className="bg-black text-slate-200 flex h-screen overflow-hidden">
-      {/* Left sidebar - Chat history */}
-      <div className="w-1/4 border-r border-slate-800 h-screen flex flex-col bg-black">
-        <div className="p-4 font-bold border-b border-black bg-gray-900 flex items-center gap-2">
-          <MessageSquare size={18} className="text-slate-400" />
-          <span className="text-slate-200">Chat History</span>
-        </div>
-
-        <ScrollArea className="flex-1 p-3">
-          {prompts && prompts.length > 0 ? (
-            <div className="space-y-2">
-              {prompts.map((prompt) => (
-                <div
-                  key={prompt.id}
-                  className="bg-gray-800 p-3 rounded-lg hover:bg-slate-700 transition-colors cursor-pointer text-sm group"
-                >
-                  <button
-                    onClick={() => {
-                      setVideoUrl(prompt.videoUrl);
-                    }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 text-slate-300">
-                        {prompt.value}
-                      </div>
-                      <ChevronRight
-                        size={16}
-                        className="text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                      />
-                    </div>
-                    <div className="flex items-center mt-2 text-xs text-slate-500">
-                      <Clock size={12} className="mr-1" />
-                      <span>Just now</span>
-                    </div>
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <Card className="bg-slate-800 border-slate-700">
-              <CardContent className="p-6 text-center">
-                <Info size={24} className="mx-auto mb-3 text-slate-500" />
-                <p className="text-slate-400 text-sm">No chat history yet</p>
-                <p className="text-slate-500 text-xs mt-2">
-                  Your conversation history will appear here
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </ScrollArea>
-
-        {/* Input area */}
-        <div className="p-4 border-t border-slate-800 bg-slate-900">
-          <div className="flex flex-row gap-2 items-center">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Enter your math animation prompt..."
-              disabled={loading}
-              className="flex-1 bg-slate-800 border-slate-700 text-slate-200 focus-visible:ring-slate-500 focus-visible:ring-offset-slate-900 placeholder:text-slate-500"
-            />
-            <Button
-              onClick={handleSendPrompt}
-              disabled={loading || !input.trim()}
-              size="icon"
-              variant="default"
-              className="bg-slate-700 hover:bg-slate-600 text-slate-200"
+    <div className="bg-gray-950 text-slate-200 flex flex-col h-screen overflow-hidden">
+      <ChatHeader />
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left sidebar - Chat history */}
+        <div className="w-2/5 border-r border-slate-800 flex flex-col bg-gray-950">
+          <div className="flex-1 overflow-hidden">
+            <ScrollArea
+              className="h-full"
+              ref={scrollRef}
+              onScroll={handleScroll}
             >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
+              <div className="p-3">
+                {isPromptsLoading ? (
+                  <div className="space-y-6">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="group transition-all duration-300">
+                        <div className="flex items-start gap-4 p-4">
+                          <div className="w-8 h-8 rounded-full bg-slate-700 animate-pulse" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="h-4 w-24 bg-slate-700 rounded animate-pulse" />
+                            </div>
+                            <div className="space-y-2">
+                              <div className="h-4 w-full bg-slate-700 rounded animate-pulse" />
+                              <div className="h-4 w-3/4 bg-slate-700 rounded animate-pulse" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : prompts && prompts.length > 0 ? (
+                  <div className="space-y-6">
+                    {prompts.map((prompt, index) => (
+                      <div
+                        key={prompt.id}
+                        className={`group transition-all duration-300 ${
+                          selectedChatId === prompt.id
+                            ? "bg-slate-800/50"
+                            : ""
+                        }`}
+                      >
+                        <div className="flex items-start gap-4 p-4">
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0`}
+                          >
+                            {prompt.type === "USER" ? (
+                              <Image
+                                src={session?.user?.image || ""}
+                                alt="User"
+                                width={32}
+                                height={32}
+                              />
+                            ) : (
+                              <span className="text-sm font-medium">
+                                <Film />
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs text-slate-500">
+                                {new Date(prompt.createdAt).toLocaleString(
+                                  "en-US",
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )}
+                              </span>
+                              {prompt.type != "USER" && prompt.videoUrl && (
+                                <button
+                                  onClick={() =>
+                                    handleChatClick(prompt.id, prompt.videoUrl)
+                                  }
+                                  className={`h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center ${
+                                    selectedChatId === prompt.id
+                                      ? "text-slate-400 opacity-100"
+                                      : "text-slate-600 hover:text-slate-400"
+                                  }`}
+                                >
+                                  <ChevronRight size={14} />
+                                </button>
+                              )}
+                            </div>
+                            <div className="prose prose-invert max-w-none">
+                              {prompt.type === "USER" ? (
+                                <div className="text-slate-200">
+                                  {prompt.value}
+                                </div>
+                              ) : (
+                                <div className="text-slate-300 space-y-4">
+                                  <SystemResponse
+                                    content={prompt.value}
+                                    promptId={prompt.id}
+                                    expandedCodeMap={expandedCodeMap}
+                                    setExpandedCodeMap={setExpandedCodeMap}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {loading && <ChatLoading />}
+                  </div>
+                ) : (
+                  <Card className="bg-slate-800 border-slate-700 animate-fade-in">
+                    <CardContent className="p-6 text-center">
+                      <Info size={24} className="mx-auto mb-3 text-slate-500" />
+                      <p className="text-slate-400 text-sm">
+                        No chat history yet
+                      </p>
+                      <p className="text-slate-500 text-xs mt-2">
+                        Your conversation history will appear here
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </ScrollArea>
+            {/* Scroll to bottom button */}
+            {!isAtBottom && (
+              <button
+                onClick={() => {
+                  if (scrollRef.current) {
+                    scrollRef.current.scrollTo({
+                      top: scrollRef.current.scrollHeight,
+                      behavior: "smooth",
+                    });
+                  }
+                }}
+                className="absolute bottom-24 right-4 p-2 rounded-full bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-300 transition-colors shadow-lg"
+              >
+                <ChevronRight className="h-4 w-4 rotate-90" />
+              </button>
+            )}
           </div>
-        </div>
-      </div>
 
-      {/* Right side - Video display */}
-      <div className="w-3/4 flex flex-col bg-black relative">
-        {/* Header */}
-        <div className="p-6 border-b border-slate-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-200 flex items-center gap-2">
-                <Film className="text-slate-400" />
-                <span>Looma</span>
-              </h1>
+          {/* Input area */}
+          <div className="p-4 border-t border-slate-800 bg-slate-900 sticky bottom-0">
+            <div className="flex flex-row gap-2 items-center">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Enter your math animation prompt..."
+                disabled={loading}
+                className="flex-1 bg-slate-800 border-slate-700 text-slate-200 focus-visible:ring-slate-500 focus-visible:ring-offset-slate-900 placeholder:text-slate-500 transition-all duration-200 focus:border-slate-600"
+              />
+              <Button
+                onClick={() => handleSendPrompt()}
+                disabled={loading || !input.trim()}
+                size="icon"
+                variant="default"
+                className="bg-slate-700 hover:bg-slate-600 text-slate-200 transition-all duration-200 hover:scale-105"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
             </div>
           </div>
         </div>
 
-        {/* Content area */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {/* Loading indicator */}
-          {loading && (
-            <Card className="mb-6 bg-slate-900 border-slate-800">
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center gap-3">
-                  <Loader2 className="animate-spin text-slate-400" size={24} />
-                  <span className="font-medium text-slate-300">
-                    {processingStage || "Processing..."}
-                  </span>
-                </div>
-
-                {/* Progress bar */}
-                <div className="w-full bg-slate-800 rounded-full h-2">
-                  <div
-                    className="bg-slate-500 h-2 rounded-full transition-all duration-300 ease-out"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Error display */}
-          {error && (
-            <Card className="mb-6 bg-red-900/20 border-red-800/50">
-              <CardContent className="p-6 flex items-start gap-3">
-                <AlertCircle
-                  className="text-red-400 mt-1 flex-shrink-0"
-                  size={20}
-                />
-                <div>
-                  <strong className="font-bold text-red-300">Error: </strong>
-                  <span className="block mt-1 text-red-200">{error}</span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Video player or placeholder */}
-          <div className="flex items-center justify-center min-h-[400px]">
-            {videoUrl ? (
-              <div className="w-full max-w-4xl">
-                <Card className="overflow-hidden bg-black border-slate-800 shadow-xl shadow-slate-900/50">
-                  <div className="relative">
-                    <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-slate-900/80 to-transparent p-3 z-10">
-                      <div className="text-xs text-slate-300 flex items-center gap-1">
-                        <Film size={12} className="text-slate-400" />
-                        Looma Animation
-                      </div>
-                    </div>
-                    <video
-                      src={videoUrl}
-                      controls
-                      autoPlay
-                      className="w-full aspect-video object-contain bg-black"
-                    >
-                      Your browser does not support the video tag.
-                    </video>
-                  </div>
-                  <div className="p-4 bg-slate-900 border-t border-slate-800">
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-slate-300">
-                        Generated Animation
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 px-3 text-xs bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
-                        >
-                          Download
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 px-3 text-xs bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-300"
-                        >
-                          Share
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+        {/* Right side - Video display */}
+        <div className="w-3/5 flex flex-col bg-gray-950 relative">
+          <div className="flex-1 overflow-y-auto p-6">
+            {loading && (
+              <div className="flex items-center justify-center ">
+                <LLMResponseLoading />
               </div>
-            ) : !loading && !error ? (
-              <Card className="bg-black border-slate-800 max-w-lg w-full shadow-lg">
-                <CardContent className="p-8 text-center">
-                  <Film
-                    size={48}
-                    className="mx-auto mb-4 text-slate-400 opacity-80"
-                  />
-                  <h3 className="text-2xl font-bold mb-2 text-slate-200">
-                    Looma Animation Generator
-                  </h3>
-                  <p className="text-slate-400 mb-6">
-                    Enter a prompt to generate a mathematical animation video
-                  </p>
-                </CardContent>
-              </Card>
-            ) : null}
+            )}
+
+            {error && <ChatErrorCard error={error} />}
+
+            {/* Video player or placeholder */}
+            <div className="flex items-center justify-center min-h-[400px]">
+              {videoUrl ? (
+                <VideoCard videoUrl={videoUrl} />
+              ) : !loading && !error ? (
+                <ChatLayoutCard />
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.5s ease-out;
+        }
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
+        }
+      `}</style>
     </div>
   );
 };

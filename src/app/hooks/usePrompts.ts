@@ -1,28 +1,48 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 
-interface Prompt {
+export interface Prompt {
   id: string;
   value: string;
   type: "USER" | "SYSTEM";
   createdAt: string;
-  videoUrl:string
+  videoUrl: string;
 }
 
 export function usePrompts(projectId: string) {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchPrompts = async () => {
+  const fetchPrompts = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
       const res = await axios.get(`/api/project/${projectId}/prompts`);
       setPrompts(res.data);
-    };
-    fetchPrompts();
+    } catch (err) {
+      console.error("Error fetching prompts:", err);
+      setError("Failed to load chat history");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    console.log("prompts", prompts);
+  const addPrompt = (newPrompt: Prompt) => {
+    setPrompts(prevPrompts => [...prevPrompts, newPrompt]);
+  };
+
+  // Initial fetch on mount and when projectId changes
+  useEffect(() => {
+    fetchPrompts();
   }, [projectId]);
 
   return {
     prompts,
+    isLoading,
+    error,
+    refetchPrompts: fetchPrompts,
+    addPrompt,
   };
 }

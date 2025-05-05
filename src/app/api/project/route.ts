@@ -23,7 +23,7 @@ export const POST = async (req: NextRequest) => {
 
     const newProject = await prisma.project.create({
       data: {
-        name: "fsfsdgsgfs",
+        name: prompt,
         description: prompt,
         userId: session.user.id,
         createdAt: new Date(),
@@ -60,7 +60,7 @@ export const POST = async (req: NextRequest) => {
   }
 };
 
-export const GET = async (req: NextRequest) => {
+export const GET = async () => {
   try {
     const session = await getServerSession(authOptions);
 

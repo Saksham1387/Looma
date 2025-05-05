@@ -5,6 +5,7 @@ import { Providers } from "./providers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth/auth";
 import { ChatsDrawer } from "@/components/Drawer";
+import { Toaster } from "@/components/ui/sonner"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ export default async function RootLayout({
         <Providers session={session}>
           <ChatsDrawer />
           {children}
+          <Toaster />
         </Providers>
       </body>
     </html>

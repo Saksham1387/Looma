@@ -72,10 +72,21 @@ export const POST = async (req: NextRequest) => {
       },
     });
 
+    await prisma.prompt.create({
+      data: {
+        value: assistantReply!,
+        projectId: projectId,
+        type: PromptType.SYSTEM,
+        videoUrl: url,
+      },
+    });
+
+
     return NextResponse.json({
       reply: assistantReply,
       url,
-      code
+      code,
+      llmResponse: assistantReply,
     });
   } catch (error) {
     console.error("Error in chat API:", error);

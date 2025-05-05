@@ -1,8 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Send } from "lucide-react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export const LandingTextBox = () => {
+  const router = useRouter();
   const [input, setInput] = useState("");
   const [visible, setVisible] = useState(true);
   const [currentPlaceholder, setCurrentPlaceholder] = useState("");
@@ -32,15 +36,31 @@ export const LandingTextBox = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSubmit = () => {
-    console.log("Submitting:", input);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post("/api/project", {
+        prompt: input,
+      });
+      const id = res.data.project.id;
+      router.push(`/chat/${id}?prompt=${encodeURIComponent(input)}`);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create project. Please try again.");
+    }
   };
 
   return (
-    <div className="w-full flex flex-row relative">
+    <form onSubmit={handleSubmit} className="w-full flex flex-row relative">
       <textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit(e);
+          }
+        }}
         className="bg-transparent text-gray-300 w-full outline-none resize-none text-lg h-32 border-b border-blue-900/30 relative z-10 p-2"
         placeholder=""
       />
@@ -59,11 +79,11 @@ export const LandingTextBox = () => {
       )}
 
       <button
-        onClick={handleSubmit}
+        type="submit"
         className="p-2 flex items-start cursor-pointer"
       >
         <Send className="text-white" />
       </button>
-    </div>
+    </form>
   );
 };

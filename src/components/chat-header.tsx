@@ -1,9 +1,5 @@
-"use client";
 import { Film } from "lucide-react";
-import { Button } from "./ui/button";
 import { signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -14,23 +10,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-
-export const LandingHeader = () => {
+import Link from "next/link";
+export const ChatHeader = () => {
   const { data: session } = useSession();
-  const router = useRouter();
   return (
-    <header className="flex justify-between items-center bg-gray-900 shadow-2xl mb-12 border-2 border-neutral-950 rounded-2xl py-4 p-3">
-      <Link href={"/"}>
-        <div className="flex items-center gap-2 flex-row">
-          <div className="h-8 w-8 rounded-full  flex items-center justify-center">
-            <Film className="text-white" />
-          </div>
-
-          <h1 className="text-2xl font-bold text-white ">Looma</h1>
-        </div>
-      </Link>
-      <div className="flex gap-4 ">
-        {session ? (
+    <div className="p-6 border-b border-slate-800 sticky top-0 z-10 bg-gray-950/95 backdrop-blur-sm">
+      <div className="flex items-center justify-between">
+        <Link href="/" className="cursor-pointer">
+          <h1 className="text-2xl font-bold text-slate-200 flex items-center gap-2">
+            <Film className="text-slate-400" />
+            <span>Looma</span>
+          </h1>
+        </Link>
+        {session && (
           <div>
             <DropdownMenu>
               <DropdownMenuTrigger className="flex flex-row gap-5">
@@ -59,15 +51,8 @@ export const LandingHeader = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        ) : (
-          <Button
-            className="bg-gray-950 hover:bg-gray-950/30 cursor-pointer"
-            onClick={() => router.push("/auth")}
-          >
-            Signin
-          </Button>
         )}
       </div>
-    </header>
+    </div>
   );
 };

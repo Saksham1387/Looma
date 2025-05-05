@@ -18,12 +18,14 @@ import {
 import { Separator } from "./ui/separator";
 import axios from "axios";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const DRAWER_WIDTH = 250;
 
 type TChat = {
   id: string;
   name: string;
+  description: string;
 };
 
 export function ChatsDrawer() {
@@ -31,6 +33,7 @@ export function ChatsDrawer() {
   const { data: session } = useSession();
   const [chats, setChats] = useState<TChat[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
   useEffect(() => {
     const fetchChats = async () => {
       try {
@@ -109,7 +112,10 @@ export function ChatsDrawer() {
             <>
               <Button
                 variant="outline"
-                className="w-full flex items-center gap-2 bg-gray-950 border-none"
+                className="w-full flex items-center gap-2 hover:bg-gray-950/50 hover:text-white bg-gray-950 border-none cursor-pointer"
+                onClick={() => {
+                  router.push("/");
+                }}
               >
                 <PlusCircleIcon size={18} />
                 <span>New Chat</span>
@@ -123,9 +129,9 @@ export function ChatsDrawer() {
                     <Link key={index} href={`/chat/${chat.id}`}>
                       <div className="pb-2 flex flex-col gap-2 cursor-pointer">
                         <div className="gap-2 bg-gray-950 rounded-xl text-sm p-3 pb-3 hover:bg-gray-950/50 flex justify-between">
-                          {chat.name.length > 20
-                            ? `${chat.name.substring(0, 20)}...`
-                            : chat.name}
+                          {chat.description.length > 20
+                            ? `${chat.description.substring(0, 20)}...`
+                            : chat.description}
                           <MessageCircleMore className="h-5 w-5 text-gray-500" />
                         </div>
                       </div>
