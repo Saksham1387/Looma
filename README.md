@@ -95,7 +95,7 @@ pnpm dev
 
 ## 🧪 Example Prompt
 
-> "Animate the expansion of (a + b)² using colored areas and labels."
+> "Make a sqaure"
 
 ---
 
