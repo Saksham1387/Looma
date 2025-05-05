@@ -16,7 +16,6 @@ Built with **Next.js**, **FastAPI**, and **OpenAI**, Looma is your creative canv
 * ⚡ **FastAPI Worker**: A Python-based worker renders Manim code securely
 * 🔐 **Google OAuth**: Authenticate via your Google account
 * 🌐 **Next.js Frontend**: Smooth UI built with React and deployed via Next.js
-* 🧰 **Monorepo with `pnpm`**: Frontend and worker live together in one project
 
 ---
 
@@ -60,7 +59,7 @@ WORKER_URL="http://0.0.0.0:8000"
 
 ## 🧱 Tech Stack
 
-* **Frontend**: Next.js 14, React, Tailwind CSS, NextAuth.js
+* **Frontend**: Next.js 14, React, Tailwind CSS, NextAuth.js, Prisma
 * **Backend Worker**: FastAPI, Manim (Python)
 * **Authentication**: Google OAuth
 * **AI Integration**: OpenAI (GPT for prompt → code generation)
@@ -84,28 +83,13 @@ Create a `.env` file at the root using the example above.
 
 ### 3. Run the Manim worker
 
-```bash
-cd packages/worker
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
+Follow the instruction provided in the folder
 
 ### 4. Run the frontend
 
 ```bash
-cd apps/web
 pnpm dev
 ```
-
----
-
-## 📤 How It Works
-
-1. User logs in via Google
-2. Enters a prompt like *“Show the Pythagorean theorem with colored triangles”*
-3. Prompt is sent to OpenAI to generate Manim Python code
-4. The code is sent to the FastAPI worker
-5. Worker renders video with Manim and returns a public URL
-6. Looma displays the video in the browser
 
 ---
 
@@ -117,10 +101,11 @@ pnpm dev
 
 ## 🛠️ Future Ideas
 
+* Add a code editor
 * User gallery and saved animations
 * More animation styles and themes
 * Real-time preview and scrubber
-* Audio narration support
+
 
 ---
 
@@ -128,12 +113,3 @@ pnpm dev
 
 Pull requests are welcome! Please open an issue first to discuss what you’d like to change.
 
----
-
-## 🪄 License
-
-MIT License. See [`LICENSE`](./LICENSE) for details.
-
----
-
-Let me know if you want badges, deployment instructions (e.g., Vercel + Docker), or architecture diagrams!
