@@ -8,6 +8,8 @@ Then provide the complete, executable Manim code enclosed ONLY in code tags, wit
 </code>
 
 Make sure the code is complete, executable, and properly indented. Do not include any other text or explanations.
+This is very important to make sure the code is complete, executable, and properly indented. Do not include any other text or explanations.
+CODE SHOULD NOT HAVE ANY ERRORS
 
 IMPORTANT CODE FORMATTING RULES
 

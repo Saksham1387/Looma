@@ -1,16 +1,63 @@
+"use client";
+import { LandingHeader } from "@/components/landing-header";
 import SignupForm from "@/components/signin-form";
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
+import { motion } from "framer-motion";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
-export default async function Auth(){
-    const session = await getServerSession();
+export default function Auth() {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.8,
+        when: "beforeChildren",
+        staggerChildren: 0.3,
+      },
+    },
+  };
 
-    if(session){
-        redirect("/")
-    }
-    return(
-        <div className="flex items-center justify-center pt-28">
-        <SignupForm/>
-        </div>
-    )
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5 },
+    },
+  };
+
+  if (session) {
+    router.push("/");
+  }
+  return (
+    <div className="bg-gray-950 h-full">
+      <motion.div
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="p-5 px-24"
+        transition={{ duration: 0.6 }}
+      >
+        <LandingHeader />
+      </motion.div>
+
+      <motion.div
+        className="items-center justify-center bg-gray-950 h-screen"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div
+          variants={itemVariants}
+          className=""
+          whileHover={{ scale: 1.02 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
+          <SignupForm />
+        </motion.div>
+      </motion.div>
+    </div>
+  );
 }

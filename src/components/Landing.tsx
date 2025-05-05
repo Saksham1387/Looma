@@ -1,27 +1,22 @@
+"use client";
 import { Badge } from "@/components/ui/badge";
 import { LandingHeader } from "./landing-header";
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { Send } from "lucide-react";
+import { LandingTextBox } from "./Landing-textbox";
 
 export default function Landing() {
-  const [input, setInput] = useState("");
-
   const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
+    initial: {},
+    animate: {
       transition: {
-        when: "beforeChildren",
         staggerChildren: 0.2,
-        duration: 0.8,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
+    initial: { y: 20, opacity: 0 },
+    animate: {
       y: 0,
       opacity: 1,
       transition: {
@@ -33,8 +28,8 @@ export default function Landing() {
   };
 
   const badgeVariants = {
-    hidden: { y: -20, opacity: 0 },
-    visible: {
+    initial: { y: -20, opacity: 0 },
+    animate: {
       y: 0,
       opacity: 1,
       transition: {
@@ -46,8 +41,8 @@ export default function Landing() {
   };
 
   const promptBoxVariants = {
-    hidden: { scale: 0.95, opacity: 0 },
-    visible: {
+    initial: { scale: 0.95, opacity: 0 },
+    animate: {
       scale: 1,
       opacity: 1,
       transition: {
@@ -67,7 +62,7 @@ export default function Landing() {
       transition: {
         duration: 7,
         repeat: Infinity,
-        repeatType: "loop" as const,
+        repeatType: "loop",
       },
     },
   };
@@ -80,7 +75,7 @@ export default function Landing() {
       transition: {
         duration: 7,
         repeat: Infinity,
-        repeatType: "loop" as const,
+        repeatType: "loop",
         delay: 2,
       },
     },
@@ -93,7 +88,7 @@ export default function Landing() {
       transition: {
         duration: 2,
         repeat: Infinity,
-        repeatType: "loop" as const,
+        repeatType: "loop",
       },
     },
   };
@@ -104,7 +99,7 @@ export default function Landing() {
       transition: {
         duration: 8,
         repeat: Infinity,
-        repeatType: "loop" as const,
+        repeatType: "loop",
         ease: "linear",
       },
     },
@@ -112,13 +107,19 @@ export default function Landing() {
 
   return (
     <motion.main
-      className="min-h-screen bg-black"
-      initial="hidden"
-      animate="visible"
+      className="min-h-screen bg-gray-950"
+      initial="initial"
+      animate="animate"
       variants={containerVariants}
     >
       <div className="container mx-auto px-4 py-6">
-        <LandingHeader />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <LandingHeader />
+        </motion.div>
 
         {/* Announcement Banner with animation */}
         <div className="flex justify-center mb-14">
@@ -140,7 +141,7 @@ export default function Landing() {
         </div>
 
         {/* Hero Section with animations */}
-        <div className="flex flex-col items-center justify-center text-center mb-16 ">
+        <div className="flex flex-col items-center justify-center text-center mb-16">
           <motion.h2
             variants={itemVariants}
             className="text-3xl sm:text-6xl md:text-5xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-400 via-gray-500 to-gray-700"
@@ -182,25 +183,11 @@ export default function Landing() {
                 ></motion.div>
               </div>
               <div className="flex flex-row">
-                <textarea
-                  placeholder=""
-                  value={input}
-                  className="bg-transparent text-white w-full outline-none resize-none text-lg h-32 border-b border-blue-900/30 relative z-10 placeholder-gray-500"
-                  onChange={(e) => setInput(e.target.value)}
-                />
-                <Send className="text-white" />
+                <LandingTextBox />
               </div>
             </div>
           </motion.div>
         </div>
-
-        {/* Footer with animation */}
-        <motion.footer
-          variants={itemVariants}
-          className="text-center text-gray-600 text-sm"
-        >
-          <p>© 2025 Looma. All rights reserved.</p>
-        </motion.footer>
       </div>
     </motion.main>
   );

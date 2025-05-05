@@ -1,11 +1,9 @@
 "use client";
 import { usePrompts } from "@/app/hooks/usePrompts";
 import type React from "react";
-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import axios from "axios";
 import {
@@ -17,7 +15,6 @@ import {
   AlertCircle,
   ChevronRight,
   Clock,
-  Sparkles,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -197,17 +194,8 @@ const Chatpage = ({ id }: Props) => {
             <div>
               <h1 className="text-2xl font-bold text-slate-200 flex items-center gap-2">
                 <Film className="text-slate-400" />
-                <span>Looma Animation Generator</span>
+                <span>Looma</span>
               </h1>
-              <p className="text-slate-400 mt-1 text-sm">
-                Visualize mathematical concepts through beautiful animations
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 bg-slate-800 px-3 py-1.5 rounded-full text-xs text-slate-300">
-                <Sparkles size={12} className="text-slate-400" />
-                <span>AI Powered</span>
-              </div>
             </div>
           </div>
         </div>
@@ -311,26 +299,6 @@ const Chatpage = ({ id }: Props) => {
                   <p className="text-slate-400 mb-6">
                     Enter a prompt to generate a mathematical animation video
                   </p>
-                  <Separator className="my-6 bg-slate-800" />
-                  <div className="text-sm text-slate-500 p-4 bg-slate-800/50 rounded-lg">
-                    <p className="mb-2 text-slate-400 font-medium">
-                      Example prompts:
-                    </p>
-                    <ul className="space-y-2 text-left">
-                      <li className="flex items-center gap-2">
-                        <ChevronRight size={14} className="text-slate-500" />
-                        "Show the proof of the Pythagorean theorem visually"
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <ChevronRight size={14} className="text-slate-500" />
-                        "Animate the concept of limits in calculus"
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <ChevronRight size={14} className="text-slate-500" />
-                        "Visualize the unit circle and trigonometric functions"
-                      </li>
-                    </ul>
-                  </div>
                 </CardContent>
               </Card>
             ) : null}
