@@ -26,7 +26,7 @@ type Props = {
 const Chatpage = ({ id }: Props) => {
   const [loading, setLoading] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null | any>(null);
   const { prompts, refetchPrompts, addPrompt, isLoading: isPromptsLoading } = usePrompts(id);
   const [input, setInput] = useState("");
   const [progress, setProgress] = useState(0);
@@ -41,14 +41,14 @@ const Chatpage = ({ id }: Props) => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const promptFromUrl = urlParams.get("prompt");
+    const modelFromUrl = urlParams.get("model");
 
     if (promptFromUrl) {
       setInput(promptFromUrl);
-      handleSendPrompt(promptFromUrl);
+      handleSendPrompt(promptFromUrl, modelFromUrl);
 
-      const newUrl =
-        window.location.pathname +
-        window.location.search.replace(/[?&]prompt=[^&]+(&|$)/, "");
+      // Remove prompt and model from URL
+      const newUrl = window.location.pathname;
       window.history.replaceState({}, "", newUrl);
     }
   }, []);
@@ -96,7 +96,7 @@ const Chatpage = ({ id }: Props) => {
     }
   }, [prompts, loading, isAtBottom]);
 
-  const handleSendPrompt = async (promptValue?: string) => {
+  const handleSendPrompt = async (promptValue?: string, model?: string | null) => {
     const promptToSend = promptValue || input;
     if (!promptToSend.trim()) return;
 
@@ -117,6 +117,7 @@ const Chatpage = ({ id }: Props) => {
       const promptResponse = await axios.post(`/api/prompt`, {
         prompt: promptToSend,
         projectId: id,
+        model: model || undefined,
       });
 
       const manimCode = promptResponse.data.code;
@@ -136,12 +137,20 @@ const Chatpage = ({ id }: Props) => {
       }
     } catch (err) {
       console.error("Error:", err);
-      setError(
-        axios.isAxiosError(err) && err.response
-          ? err.response.data.error ||
-              "Failed to process prompt or generate video"
-          : "An unexpected error occurred"
-      );
+
+      // Handle detailed error information
+      if (axios.isAxiosError(err) && err.response?.data) {
+        const errorData = err.response.data;
+
+        // Check if we have a detailed error object
+        if (typeof errorData === 'object' && errorData.error) {
+          setError(errorData);
+        } else {
+          setError(errorData.error || "Failed to process prompt or generate video");
+        }
+      } else {
+        setError("An unexpected error occurred");
+      }
     } finally {
       setLoading(false);
       setInput("");
@@ -150,7 +159,7 @@ const Chatpage = ({ id }: Props) => {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !loading) {
       handleSendPrompt();
     }
@@ -196,7 +205,7 @@ const Chatpage = ({ id }: Props) => {
                   </div>
                 ) : prompts && prompts.length > 0 ? (
                   <div className="space-y-6">
-                    {prompts.map((prompt, index) => (
+                    {prompts.map((prompt) => (
                       <div
                         key={prompt.id}
                         className={`group transition-all duration-300 ${
@@ -311,7 +320,7 @@ const Chatpage = ({ id }: Props) => {
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 placeholder="Enter your math animation prompt..."
                 disabled={loading}
                 className="flex-1 bg-slate-800 border-slate-700 text-slate-200 focus-visible:ring-slate-500 focus-visible:ring-offset-slate-900 placeholder:text-slate-500 transition-all duration-200 focus:border-slate-600"
