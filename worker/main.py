@@ -27,14 +27,14 @@ app.add_middleware(
 
 class ManimCode(BaseModel):
     code: str
-    scene_name: str | None = None 
-    
+    scene_name: str | None = None
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    
+
     os.makedirs("temp", exist_ok=True)
     yield
-    
+
     if os.path.exists("temp"):
         shutil.rmtree("temp")
 
@@ -52,7 +52,7 @@ async def run_manim(data: ManimCode):
     file_path = None
     video_path = None
     try:
-        
+
         try:
             ast.parse(data.code)
         except SyntaxError as e:
@@ -60,21 +60,21 @@ async def run_manim(data: ManimCode):
             print(error_message)
             return JSONResponse({"error": error_message}, status_code=400)
 
-        
+
         temp_dir = "temp"
         os.makedirs(temp_dir, exist_ok=True)
 
-        
+
         file_path = os.path.join(temp_dir, "main.py")
         with open(file_path, "w") as f:
             f.write(data.code)
 
-        
+
         scene_name = data.scene_name or extract_scene_name(data.code)
         if not scene_name:
             return JSONResponse({"error": "Could not determine scene name. Specify 'scene_name' or ensure code defines a Scene class."}, status_code=400)
 
-        
+
         result = subprocess.run(
             ["manim", "-ql", file_path, scene_name],
             capture_output=True,
@@ -86,7 +86,7 @@ async def run_manim(data: ManimCode):
             print(error_message)
             return JSONResponse({"error": error_message}, status_code=400)
 
-        
+
         video_file = f"{scene_name}.mp4"
         video_path = os.path.join("media", "videos", "main", "480p15", video_file)
         if not os.path.exists(video_path):
@@ -94,20 +94,20 @@ async def run_manim(data: ManimCode):
             print(error_message)
             return JSONResponse({"error": error_message}, status_code=500)
 
-        
+
         aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
         aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-        aws_region = os.getenv('AWS_REGION', 'us-east-1')  
-        bucket_name = os.getenv('S3_BUCKET_NAME', 'assignment-starbaord')
+        aws_region = os.getenv('AWS_REGION')
+        bucket_name = os.getenv('AWS_S3_BUCKET_NAME')
 
-        
+
         s3_client = boto3.client(
             's3',
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
             region_name=aws_region
         )
-        
+
         s3_key = f"videos/{uuid.uuid4().hex}_{video_file}"
         try:
             s3_client.upload_file(
@@ -122,17 +122,28 @@ async def run_manim(data: ManimCode):
             print(error_message)
             return JSONResponse({"error": error_message}, status_code=500)
 
-        
+
         return {"videoUrl": s3_url}
 
     except subprocess.TimeoutExpired:
         return JSONResponse({"error": "Manim execution timed out"}, status_code=408)
+    except FileNotFoundError as e:
+        # This is likely due to Manim not being installed or not in PATH
+        error_message = f"Manim not found: {str(e)}"
+        print(error_message)
+        return JSONResponse({
+            "error": error_message,
+            "solution": "Make sure Manim is installed and in the system PATH. Run 'pip install manim' and ensure ffmpeg is installed."
+        }, status_code=500)
     except Exception as e:
         error_message = f"Unexpected error: {str(e)}"
         print(error_message)
+        # Print more detailed error information for debugging
+        import traceback
+        traceback.print_exc()
         return JSONResponse({"error": error_message}, status_code=500)
     finally:
-        
+
         if file_path and os.path.exists(file_path):
             os.remove(file_path)
         if video_path and os.path.exists(video_path):
