@@ -1,5 +1,4 @@
 "use client";
-import { Film } from "lucide-react";
 import { Button } from "./ui/button";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -14,16 +13,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import Image from "next/image";
 
 export const LandingHeader = () => {
   const { data: session } = useSession();
   const router = useRouter();
   return (
-    <header className="flex justify-between items-center bg-gray-900 shadow-2xl mb-12 border-2 border-neutral-950 rounded-2xl py-4 p-3">
+    <header className="flex justify-between items-center bg-neutral-950 mb-12  rounded-2xl py-4 p-3 border border-[#222222] ">
       <Link href={"/"}>
         <div className="flex items-center gap-2 flex-row">
-          <div className="h-8 w-8 rounded-full  flex items-center justify-center">
-            <Film className="text-white" />
+          <div className="h-10 w-10 rounded-full  flex items-center justify-center">
+           <Image src="/logo (1).png" alt="logo" width={30} height={30} /> 
           </div>
 
           <h1 className="text-2xl font-bold text-white ">Looma</h1>
@@ -61,7 +61,7 @@ export const LandingHeader = () => {
           </div>
         ) : (
           <Button
-            className="bg-gray-950 hover:bg-gray-950/30 cursor-pointer"
+            className=" hover:text-teal-400 cursor-pointer"
             onClick={() => router.push("/auth")}
           >
             Signin

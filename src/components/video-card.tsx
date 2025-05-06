@@ -29,21 +29,20 @@ export const VideoCard = ({ videoUrl }: VideoCardProps) => {
 
   return (
     <div className="w-full max-w-4xl animate-fade-in">
-      <Card className="overflow-hidden bg-black border-slate-800 shadow-xl shadow-slate-900/50 transform transition-all duration-300 hover:shadow-2xl hover:shadow-slate-900/70">
+      <Card className="overflow-hidden bg-neutral-950 border-none">
         <div className="relative">
-          <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-slate-900/80 to-transparent p-3 z-10"></div>
           <video
             src={videoUrl}
             controls
             autoPlay
-            className="w-full h-full object-contain bg-black"
+            className="w-full h-full object-contain bg-black rounded-3xl"
           >
             Your browser does not support the video tag.
           </video>
           <div className="absolute top-0 left-0 right-0 p-3 flex justify-between items-center z-20">
             <button
               onClick={handleDownload}
-              className="h-8 w-8 rounded-full bg-slate-800/80 hover:bg-indigo-600/90 text-white flex items-center justify-center transition-all duration-200 hover:scale-105"
+              className="h-8 w-8 rounded-full bg-[#0f0f0f] cursor-pointer hover:text-teal-400 text-white flex items-center justify-center transition-all duration-200 hover:scale-105"
               aria-label="Download video"
             >
               <Download className="h-4 w-4" />

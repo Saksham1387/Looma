@@ -9,16 +9,16 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "./ui/button";
 import {
-  Film,
   LogInIcon,
   LogOutIcon,
   MessageCircleMore,
   PlusCircleIcon,
 } from "lucide-react";
-import { Separator } from "./ui/separator";
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Separator } from "./ui/separator";
 
 const DRAWER_WIDTH = 250;
 
@@ -34,12 +34,12 @@ export function ChatsDrawer() {
   const [chats, setChats] = useState<TChat[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
   useEffect(() => {
     const fetchChats = async () => {
       try {
         const res = await axios.get("/api/project");
         const data = res.data;
-        console.log(data.projects);
         setChats(data.projects);
       } catch (error) {
         console.error("Failed to fetch chats:", error);
@@ -73,14 +73,14 @@ export function ChatsDrawer() {
   }, []);
 
   const ChatSkeleton = () => (
-    <div className="pb-2 flex flex-col gap-2">
+    <div className="flex flex-col gap-2">
       {[1, 2, 3, 4, 5].map((item) => (
         <div
           key={item}
-          className="gap-2 bg-gray-950 rounded-xl text-sm p-3 pb-3 animate-pulse flex justify-between"
+          className="bg-[#111111] border border-[#222222] rounded-md p-3 animate-pulse flex justify-between items-center"
         >
-          <div className="h-4 bg-gray-800 rounded w-3/4"></div>
-          <div className="h-5 w-5 bg-gray-800 rounded"></div>
+          <div className="h-4 bg-[#222222] rounded w-3/4"></div>
+          <div className="h-5 w-5 bg-[#222222] rounded"></div>
         </div>
       ))}
     </div>
@@ -98,21 +98,19 @@ export function ChatsDrawer() {
           display: "flex",
           flexDirection: "column",
         }}
-        className="bg-gray-900 text-white border-none"
+        className="bg-[#0C0C0C] text-white border-r border-[#222222]"
       >
-        <DrawerHeader className="p-4 space-y-4">
-          <div className="flex flex-row items-center gap-2 bg-gray-950 rounded-xl p-3">
-            <Film className="text-white w-6 h-6" />
-            <div className="pt-2 text-xl font-bold">Looma</div>
+        <DrawerHeader className="p-4 pb-0 flex flex-col h-auto">
+          <div className="flex flex-row items-center gap-2 border border-none rounded-md p-3">
+            <Image src="/logo (1).png" alt="logo" width={20} height={20} />
+            <div className="text-lg font-bold">Looma</div>
           </div>
-
-          <Separator className="border-none"></Separator>
-
+          <Separator />
           {session ? (
-            <>
+            <div className="py-3">
               <Button
-                variant="outline"
-                className="w-full flex items-center gap-2 hover:bg-gray-950/50 hover:text-white bg-gray-950 border-none cursor-pointer"
+                variant="ghost"
+                className="w-full flex bg-[#111111] items-center gap-2 text-gray-400 hover:text-teal-400 hover:bg-[#111111] cursor-pointer justify-start px-3 h-10"
                 onClick={() => {
                   router.push("/");
                 }}
@@ -120,60 +118,62 @@ export function ChatsDrawer() {
                 <PlusCircleIcon size={18} />
                 <span>New Chat</span>
               </Button>
+            </div>
+          ) : null}
+        </DrawerHeader>
 
-              {loading ? (
-                <ChatSkeleton />
-              ) : chats && chats.length > 0 ? (
-                <div>
-                  {chats.map((chat, index) => (
-                    <Link key={index} href={`/chat/${chat.id}`}>
-                      <div className="pb-2 flex flex-col gap-2 cursor-pointer">
-                        <div className="gap-2 bg-gray-950 rounded-xl text-sm p-3 pb-3 hover:bg-gray-950/50 flex justify-between">
-                          {chat.description.length > 20
-                            ? `${chat.description.substring(0, 20)}...`
-                            : chat.description}
-                          <MessageCircleMore className="h-5 w-5 text-gray-500" />
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="overflow-y-auto flex-1 mt-2">
-                  <div className="text-sm text-gray-400 text-center py-4">
-                    No chats yet. Start a new conversation!
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center gap-4 mt-8">
-              <div className="text-sm text-gray-400 text-center py-4">
-                Please login to access chats
+        {/* Scrollable chats section */}
+        <div className="flex-1 overflow-y-auto p-4 pt-2">
+          {session ? (
+            loading ? (
+              <ChatSkeleton />
+            ) : chats && chats.length > 0 ? (
+              <div className="space-y-2">
+                {chats.map((chat, index) => (
+                  <Link key={index} href={`/chat/${chat.id}`}>
+                    <div className="hover:bg-[#111111] rounded-md p-3 text-sm hover:border-[#333333] transition-colors flex justify-between items-center cursor-pointer group">
+                      <span className="text-gray-400 group-hover:text-white truncate max-w-[170px]">
+                        {chat.description}
+                      </span>
+                      <MessageCircleMore className="h-4 w-4 text-gray-500 group-hover:text-teal-400" />
+                    </div>
+                  </Link>
+                ))}
               </div>
+            ) : (
+              <div className="bg-[#111111] border border-[#222222] rounded-md p-4 text-center">
+                <p className="text-sm text-gray-500">No chats yet</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Start a new conversation
+                </p>
+              </div>
+            )
+          ) : (
+            <div className="flex flex-col items-center gap-4 mt-2 bg-[#111111] border border-[#222222] rounded-md p-5">
+              <p className="text-sm text-gray-400">
+                Please login to access chats
+              </p>
               <Link href="/auth">
                 <Button
-                  variant="outline"
-                  className="flex items-center gap-2  text-white border-none bg-gray-950 hover:bg-gray-950/50 hover:text-white"
+                  variant="ghost"
+                  className="flex items-center gap-2 text-gray-400 hover:text-teal-400 hover:bg-[#111111] bg-transparent"
                 >
-                  <LogInIcon size={18} />
+                  <LogInIcon size={16} />
                   <span>Login</span>
                 </Button>
               </Link>
             </div>
           )}
-        </DrawerHeader>
-        <div className="flex-grow"></div>
+        </div>
 
-        <DrawerFooter className="p-4 pt-0 mt-auto">
-          <Separator />
+        <DrawerFooter className="p-4 pt-0 mt-0 border-t border-[#222222]">
           {session && (
             <Button
-              variant="outline"
-              className="w-full flex items-center gap-2 text-white border-none bg-gray-950 hover:bg-gray-950/50 hover:text-white"
+              variant="ghost"
+              className="w-full flex items-center gap-2 text-gray-400 hover:text-teal-400 hover:bg-[#111111] bg-transparent justify-start px-3 h-10"
               onClick={() => signOut()}
             >
-              <LogOutIcon size={18} />
+              <LogOutIcon size={16} />
               <span>Logout</span>
             </Button>
           )}

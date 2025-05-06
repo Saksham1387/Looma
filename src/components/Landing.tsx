@@ -1,9 +1,10 @@
 "use client";
-import { Badge } from "@/components/ui/badge";
 import { LandingHeader } from "./landing-header";
 import { motion } from "framer-motion";
 import { LandingTextBox } from "./Landing-textbox";
-
+import { ShimmerButton } from "@/components/magicui/shimmer-button";
+import { Github, Twitter } from "lucide-react";
+import Link from "next/link";
 export default function Landing() {
   const containerVariants = {
     initial: {},
@@ -107,7 +108,7 @@ export default function Landing() {
 
   return (
     <motion.main
-      className="min-h-screen bg-gray-950"
+      className="min-h-screen bg-[#0f0f0f]"
       initial="initial"
       animate="animate"
       variants={containerVariants}
@@ -124,10 +125,7 @@ export default function Landing() {
         {/* Announcement Banner with animation */}
         <div className="flex justify-center mb-14">
           <motion.div variants={badgeVariants}>
-            <Badge
-              variant="outline"
-              className="py-2 px-4 border-gray-900 bg-gray-900/10 text-blue-200 flex items-center gap-2 rounded-full"
-            >
+            <ShimmerButton className="gap-2 text-xs">
               <motion.span
                 variants={pulseVariant}
                 animate="animate"
@@ -136,7 +134,7 @@ export default function Landing() {
                 ⚡
               </motion.span>{" "}
               Early Access
-            </Badge>
+            </ShimmerButton>
           </motion.div>
         </div>
 
@@ -159,9 +157,9 @@ export default function Landing() {
 
           <motion.div
             variants={promptBoxVariants}
-            className="relative w-full max-w-3xl rounded-xl overflow-hidden mb-12"
+            className="relative w-full max-w-3xl overflow-hidden mb-12"
           >
-            <div className="bg-gradient-to-r from-gray-900/20 to-gray-800/20 rounded-xl p-6 relative overflow-hidden">
+            <div className="bg-gradient-to-r from-neutral-900/20 to-neutral-800/20 rounded-lg relative overflow-hidden">
               {/* Animated background */}
               <div className="absolute inset-0 opacity-30">
                 <motion.div
@@ -182,11 +180,24 @@ export default function Landing() {
                   className="absolute -bottom-32 -right-32 w-64 h-64 bg-blue-700/20 rounded-full blur-3xl"
                 ></motion.div>
               </div>
-              <div className="flex flex-row">
+              <div className="flex flex-row min-h-[160px]">
                 <LandingTextBox />
               </div>
             </div>
           </motion.div>
+
+          <div className="flex flex-row justify-center items-center gap-3">
+            <Link href="https://github.com/Saksham1387/Looma">
+            <div className="flex flex-row items-center gap-2 bg-neutral-900 rounded-lg p-2 cursor-pointer">
+              <Github className="text-gray-400" size={20} />
+            </div>
+            </Link>
+            <Link href="https://x.com/Saksham37718116">
+            <div className="flex flex-row items-center gap-2 bg-neutral-900 rounded-lg p-2 cursor-pointer">
+              <Twitter className="text-gray-400" size={20} />
+            </div>
+            </Link>
+          </div>
         </div>
       </div>
     </motion.main>

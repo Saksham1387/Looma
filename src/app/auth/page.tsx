@@ -33,7 +33,7 @@ export default function Auth() {
     router.push("/");
   }
   return (
-    <div className="bg-gray-950 h-full">
+    <div className="bg-[#0f0f0f] h-full">
       <motion.div
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -44,7 +44,7 @@ export default function Auth() {
       </motion.div>
 
       <motion.div
-        className="items-center justify-center bg-gray-950 h-screen"
+        className="items-center justify-center bg-[#0f0f0f] h-screen"
         variants={containerVariants}
         initial="hidden"
         animate="visible"

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { signIn } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
 import { Button } from "@/components/ui/button";
-import { Film } from "lucide-react";
+import Image from "next/image";
 
 export default function SignupForm() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -17,11 +17,11 @@ export default function SignupForm() {
   };
 
   return (
-    <div className="max-w-md w-full mx-auto rounded-xl md:p-8 shadow-lg bg-gray-900 border border-gray-950">
+    <div className="max-w-md w-full mx-auto rounded-xl md:p-8 shadow-lg bg-neutral-950 border border-neutral-900">
       {/* Logo/Brand Mark */}
       <div className="flex justify-center mb-6">
-        <div className="w-16 h-16 bg-gray-950 rounded-xl flex items-center justify-center shadow-md">
-          <Film className="text-white" />
+        <div className="rounded-xl flex items-center justify-center shadow-md">
+          <Image src="/logo (1).png" alt="logo" width={30} height={30} />
         </div>
       </div>
 
@@ -37,16 +37,16 @@ export default function SignupForm() {
         {/* Decorative Wave Element */}
         <div className="relative py-3 flex items-center justify-center mb-4">
           <div className="w-full border-t border-gray-950"></div>
-          <div className="absolute px-3 bg-gray-900">
-            <span className="text-sm text-gray-400">Continue with</span>
+          <div className="absolute px-3 ">
+            <span className="text-sm  text-white">Continue with</span>
           </div>
         </div>
 
         <div className="space-y-4">
           <Button
             className="relative w-full group flex items-center justify-center py-3 px-4 rounded-lg transition-all  cursor-pointer duration-200 
-                     bg-gray-950 hover:bg-gray-900
-                     text-gray-300 font-medium
+                     bg-white hover:bg-white/90
+                     text-black font-medium
                      border border-gray-950
                      shadow-sm hover:shadow-md"
             type="button"
@@ -63,7 +63,7 @@ export default function SignupForm() {
         </div>
 
         {/* Future Options Note */}
-        <p className="text-xs text-center text-gray-400 mt-8">
+        <p className="text-xs text-center text-gray-300 mt-8">
           More sign-in options coming soon
         </p>
       </div>
