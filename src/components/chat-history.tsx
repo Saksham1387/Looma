@@ -1,4 +1,4 @@
-import { usePrompts } from "@/app/hooks/usePrompts";
+import { Prompt, usePrompts } from "@/app/hooks/usePrompts";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,6 +11,7 @@ import { ChatLoading } from "./chat-loading";
 
 type ChatHistoryProps = {
   id: string;
+  prompts:Prompt[]
   onChatSelect: (promptId: string, promptVideoUrl: string) => void;
   loading: boolean;
   onSendPrompt: (promptValue?: string, model?: string | null) => void;
@@ -20,9 +21,10 @@ export const ChatHistory = ({
   id,
   onChatSelect,
   loading,
+  prompts,
   onSendPrompt,
 }: ChatHistoryProps) => {
-  const { prompts, isLoading: isPromptsLoading } = usePrompts(id);
+  const { isLoading: isPromptsLoading } = usePrompts(id);
   const [input, setInput] = useState("");
   const { data: session } = useSession();
   const [expandedCodeMap, setExpandedCodeMap] = useState<

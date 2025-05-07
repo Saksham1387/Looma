@@ -24,7 +24,7 @@ const Chatpage = ({ id }: Props) => {
   const [loading, setLoading] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [error, setError] = useState<ErrorResponse | null>(null);
-  const { refetchPrompts, addPrompt } = usePrompts(id);
+  const { refetchPrompts, addPrompt,prompts } = usePrompts(id);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
 
@@ -54,54 +54,110 @@ const Chatpage = ({ id }: Props) => {
     };
   }, [loading, progress]);
 
+  // const handleSendPrompt = async (
+  //   promptValue?: string,
+  //   model?: string | null
+  // ) => {
+  //   const promptToSend = promptValue;
+  //   if (!promptToSend?.trim()) return;
+
+  //   setLoading(true);
+  //   setError(null);
+  //   setVideoUrl(null);
+
+  //   try {
+  //     const promptResponse = await axios.post(`/api/prompt`, {
+  //       prompt: promptToSend,
+  //       projectId: id,
+  //       model: model || undefined,
+  //     });
+
+  //     const manimCode = promptResponse.data.code;
+  //     setVideoUrl(promptResponse.data.url);
+
+  //     if (!manimCode) {
+  //       throw new Error("No Manim code returned from /api/prompt");
+  //     }
+  //   } catch (err) {
+  //     console.error("Error:", err);
+
+  //     if (axios.isAxiosError(err) && err.response?.data) {
+  //       const errorData = err.response.data;
+
+  //       if (typeof errorData === "object" && errorData.error) {
+  //         setError(errorData as ErrorResponse);
+  //       } else {
+  //         setError({
+  //           error:
+  //             errorData.error || "Failed to process prompt or generate video",
+  //         });
+  //       }
+  //     } else {
+  //       setError({
+  //         error: "An unexpected error occurred",
+  //       });
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //     refetchPrompts();
+  //   }
+  // };
+
   const handleSendPrompt = async (
     promptValue?: string,
     model?: string | null
   ) => {
     const promptToSend = promptValue;
     if (!promptToSend?.trim()) return;
-
+  
     setLoading(true);
     setError(null);
     setVideoUrl(null);
-
-    const userPrompt: Prompt = {
-      id: Date.now().toString(),
-      value: promptToSend,
-      type: "USER",
-      createdAt: new Date().toISOString(),
-      videoUrl: "",
-    };
-    addPrompt(userPrompt);
-
+  
     try {
+      // Add the user prompt to the UI immediately (optimistic update)
+      const tempPromptId = `temp-${Date.now()}`;
+      const userPrompt: Prompt = {
+        id: tempPromptId,
+        value: promptToSend,
+        type: "USER",
+        createdAt: new Date().toISOString(),
+        videoUrl: "",
+      };
+      
+      // Add to local state immediately
+      addPrompt(userPrompt);
+  
       const promptResponse = await axios.post(`/api/prompt`, {
         prompt: promptToSend,
         projectId: id,
         model: model || undefined,
       });
-
+  
       const manimCode = promptResponse.data.code;
-      setVideoUrl(promptResponse.data.url);
-
-      const systemPrompt: Prompt = {
-        id: (Date.now() + 1).toString(),
-        value: promptResponse.data.response || "Processing your request...",
-        type: "SYSTEM",
-        createdAt: new Date().toISOString(),
-        videoUrl: promptResponse.data.url || "",
-      };
-      addPrompt(systemPrompt);
-
+      const videoUrl = promptResponse.data.url;
+      
+      setVideoUrl(videoUrl);
+  
+      // Add the system response with the video URL
+      if (promptResponse.data.promptId) {
+        // If the API returns a promptId, we have a proper record in the database
+        // Refresh all prompts to get the complete and accurate state
+        await refetchPrompts();
+        
+        // Select the newly created prompt
+        setSelectedChatId(promptResponse.data.promptId);
+      }
+  
       if (!manimCode) {
         throw new Error("No Manim code returned from /api/prompt");
       }
     } catch (err) {
       console.error("Error:", err);
-
+  
       if (axios.isAxiosError(err) && err.response?.data) {
         const errorData = err.response.data;
-
+  
         if (typeof errorData === "object" && errorData.error) {
           setError(errorData as ErrorResponse);
         } else {
@@ -117,6 +173,7 @@ const Chatpage = ({ id }: Props) => {
       }
     } finally {
       setLoading(false);
+      // Ensure we have the latest prompts regardless of success/failure
       refetchPrompts();
     }
   };
@@ -132,6 +189,7 @@ const Chatpage = ({ id }: Props) => {
       <ChatHeader />
       <div className="flex flex-1 overflow-hidden ">
         <ChatHistory
+        prompts={prompts}
           id={id}
           onChatSelect={handleChatClick}
           loading={loading}
@@ -154,15 +212,13 @@ const Chatpage = ({ id }: Props) => {
                   <VideoCard videoUrl={videoUrl} />
                 ) : !loading && !error ? (
                   <div>
-                  <ChatLayoutCard />
+                    <ChatLayoutCard />
                   </div>
                 ) : null}
               </div>
             </div>
           </div>
         </div>
-
-
       </div>
 
       {/* TODO: Can be a better way to do this */}

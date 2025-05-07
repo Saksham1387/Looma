@@ -12,7 +12,7 @@ export const POST = async (req: NextRequest) => {
     }
 
     const body = await req.json();
-    const { prompt, model = "OpenAI" } = body;
+    const { prompt } = body;
 
     if (!prompt) {
       return NextResponse.json(
@@ -21,13 +21,10 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    // Store model information in the description field
-    const description = `${prompt} [Model: ${model}]`;
-
     const newProject = await prisma.project.create({
       data: {
         name: prompt,
-        description: description,
+        description: prompt,
         userId: session.user.id,
         createdAt: new Date(),
         updatedAt: new Date(),

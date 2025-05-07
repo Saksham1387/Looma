@@ -28,14 +28,14 @@ export const LLMResponseLoading = () => {
   const CurrentIcon = processingStages[currentStageIndex].icon;
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="bg-gray-950 border-none rounded-xl shadow-lg overflow-hidden backdrop-blur-lg">
-        <div className="p-6 space-y-5">
+    <div className="w-full max-w-md mx-auto text-white flex-col items-center">
+      <div className="border-none overflow-hidden backdrop-blur-lg">
+        <div className="p-6 space-y-5  rounded-lg shadow">
           <div className="w-full flex justify-center">
             <div className="relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full opacity-30 blur-md animate-pulse"></div>
-              <div className="relative bg-slate-800 rounded-full p-3">
-                <CurrentIcon className="h-6 w-6 text-cyan-400 animate-spin" />
+              <div className="absolute -inset-1 bg-black rounded-full opacity-10 blur-md animate-pulse"></div>
+              <div className="relative bg-black rounded-full p-3">
+                <CurrentIcon className="h-6 w-6 text-white animate-spin" />
               </div>
             </div>
           </div>
@@ -44,21 +44,20 @@ export const LLMResponseLoading = () => {
               {processingStages.map((stage, index) => (
                 <div
                   key={index}
-                  className="font-medium text-lg absolute w-full transition-all duration-300 ease-in-out"
+                  className="font-medium text-lg absolute w-full text-whitetransition-all duration-300 ease-in-out"
                   style={{
                     transform: `translateY(${
                       (index - currentStageIndex) * 100
                     }%)`,
                     opacity: index === currentStageIndex ? 1 : 0,
+                    color: "white",
                   }}
                 >
-                  <span className="bg-gradient-to-r from-cyan-300 to-purple-300 text-transparent bg-clip-text">
-                    {stage.text}
-                  </span>
+                  {stage.text}
                 </div>
               ))}
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-white opacity-60">
               Please wait while we process your request
             </p>
           </div>
@@ -66,7 +65,7 @@ export const LLMResponseLoading = () => {
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="w-1.5 h-1.5 rounded-full bg-cyan-400"
+                className="w-1.5 h-1.5 rounded-full text-white"
                 style={{
                   animation: `bounce 1.4s ease-in-out ${i * 0.2}s infinite`,
                 }}
@@ -76,7 +75,6 @@ export const LLMResponseLoading = () => {
         </div>
       </div>
 
-      {/* Global styles for animations */}
       <style jsx global>{`
         @keyframes shimmer {
           0% {

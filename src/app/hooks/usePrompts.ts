@@ -15,6 +15,7 @@ export function usePrompts(projectId: string) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchPrompts = async () => {
+    console.log("Fetching prompts for project", projectId);
     setIsLoading(true);
     setError(null);
     
@@ -33,7 +34,14 @@ export function usePrompts(projectId: string) {
     setPrompts(prevPrompts => [...prevPrompts, newPrompt]);
   };
 
-  // Initial fetch on mount and when projectId changes
+  const updatePrompt = (promptId: string, updatedPrompt: Prompt) => {
+    setPrompts(prevPrompts => 
+      prevPrompts.map(prompt => 
+        prompt.id === promptId ? updatedPrompt : prompt
+      )
+    );
+  };
+
   useEffect(() => {
     fetchPrompts();
   }, [projectId]);
@@ -44,5 +52,6 @@ export function usePrompts(projectId: string) {
     error,
     refetchPrompts: fetchPrompts,
     addPrompt,
+    updatePrompt,
   };
 }

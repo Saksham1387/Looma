@@ -1,4 +1,0 @@
-# This file is used internally by FFMPEG.
-file 'file:/Users/sakshamchaudhary/Documents/MyProjects/InstructAI/my-app/worker/media/videos/main/480p15/partial_movie_files/SquareWithPlus/1185818338_513577100_223132457.mp4'
-file 'file:/Users/sakshamchaudhary/Documents/MyProjects/InstructAI/my-app/worker/media/videos/main/480p15/partial_movie_files/SquareWithPlus/624642324_2134603285_999200243.mp4'
-file 'file:/Users/sakshamchaudhary/Documents/MyProjects/InstructAI/my-app/worker/media/videos/main/480p15/partial_movie_files/SquareWithPlus/624642324_2844360058_3096445020.mp4'
