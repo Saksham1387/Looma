@@ -47,7 +47,7 @@ export const SystemResponse = ({
             const match = /language-(\w+)/.exec(className || "");
             return !inline && match ? (
               <SyntaxHighlighter
-                style={vscDarkPlus as StyleType}
+                style={vscDarkPlus as unknown as  StyleType}
                 language={match[1]}
                 PreTag="div"
                 {...props}
@@ -64,7 +64,7 @@ export const SystemResponse = ({
             <p className="text-slate-300 leading-relaxed">{children}</p>
           ),
           pre: ({ children }) => (
-            <pre className="bg-slate-800 p-4 rounded-lg overflow-x-auto">
+            <pre className="bg-[#0f0f0f] p-4 rounded-lg overflow-x-auto">
               {children}
             </pre>
           ),
@@ -87,7 +87,7 @@ export const SystemResponse = ({
         <ReactMarkdown
           components={{
             p: ({ children }) => (
-              <p className="text-slate-300 leading-relaxed">{children}</p>
+              <p className="text-slate-300 leading-relaxed ">{children}</p>
             ),
           }}
         >
@@ -101,7 +101,7 @@ export const SystemResponse = ({
           variant="outline"
           size="sm"
           onClick={() => toggleCodeVisibility(promptId)}
-          className="flex items-center gap-2 bg-neutral-800  text-slate-300 hover:bg-neutral-900 border-neutral-700 hover:text-slate-200 w-full justify-between"
+          className="flex items-center gap-2  bg-neutral-800 text-slate-300 hover:bg-neutral-900 border-neutral-700 hover:text-slate-200 w-full justify-between"
         >
           <div className="flex items-center gap-2">
             <Code size={16} />
@@ -113,8 +113,8 @@ export const SystemResponse = ({
         {/* Code content */}
         {isExpanded && codeContent && (
           <div className="border border-neutral-700 rounded-md w-full">
-            <div className="max-w-full overflow-x-auto">
-              <div className="min-w-0">
+            <div className="max-w-full overflow-x-auto ">
+              <div className="min-w-0 ">
                 <SyntaxHighlighter
                   style={vscDarkPlus as { [key: string]: React.CSSProperties }}
                   language="python"
@@ -141,7 +141,7 @@ export const SystemResponse = ({
         <ReactMarkdown
           components={{
             p: ({ children }) => (
-              <p className="text-slate-300 leading-relaxed">{children}</p>
+              <p className="text-slate-300 leading-relaxed ">{children}</p>
             ),
           }}
         >

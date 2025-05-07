@@ -117,6 +117,8 @@ async def run_manim(data: ManimCode):
                 ExtraArgs={"ContentType": "video/mp4"}
             )
             s3_url = f"https://{bucket_name}.s3.amazonaws.com/{s3_key}"
+            os.remove(video_path)
+            
         except ClientError as e:
             error_message = f"Failed to upload to S3: {str(e)}"
             print(error_message)
@@ -128,8 +130,8 @@ async def run_manim(data: ManimCode):
     except subprocess.TimeoutExpired:
         return JSONResponse({"error": "Manim execution timed out"}, status_code=408)
     except FileNotFoundError as e:
-        # This is likely due to Manim not being installed or not in PATH
         error_message = f"Manim not found: {str(e)}"
+        
         print(error_message)
         return JSONResponse({
             "error": error_message,
@@ -138,7 +140,7 @@ async def run_manim(data: ManimCode):
     except Exception as e:
         error_message = f"Unexpected error: {str(e)}"
         print(error_message)
-        # Print more detailed error information for debugging
+
         import traceback
         traceback.print_exc()
         return JSONResponse({"error": error_message}, status_code=500)

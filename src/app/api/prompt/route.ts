@@ -5,6 +5,8 @@ import { SystemPrompt } from "@/lib/prompt";
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { generateText } from "ai";
+import { google } from "@ai-sdk/google";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -42,22 +44,37 @@ export const POST = async (req: NextRequest) => {
       );
     }
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4.1-2025-04-14",
-      messages: [
-        { role: "system", content: SystemPrompt },
-        { role: "user", content: prompt },
-      ],
-      max_tokens: 300,
-    });
+    let responseText;
+    
+    if (model === "Gemini") {
+      const { text } = await generateText({
+        model: google("models/gemini-2.5-pro-exp-03-25"),
+        prompt: prompt,
+        system:SystemPrompt
+      });
+      responseText = text;
+      console.log("responseText-----");
+      console.log(responseText);
+    } else {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4.1-2025-04-14",
+        messages: [
+          { role: "system", content: SystemPrompt },
+          { role: "user", content: prompt },
+        ],
+        max_tokens: 2000,
+      });
+      const assistantReply = response.choices[0].message.content;
+      responseText = assistantReply;
+      console.log("responseText-----");
+      console.log(responseText);
+    }
 
-    const assistantReply = response.choices[0].message.content;
-    const responseText = assistantReply;
     const code = extractPythonCode(responseText!);
 
     let fastApiResponse;
     try {
-      fastApiResponse = await axios.post(`http://0.0.0.0:8000/run-manim`, {
+      fastApiResponse = await axios.post(process.env.WORKER_URL!, {
         code,
       });
     } catch (e) {
@@ -84,7 +101,7 @@ export const POST = async (req: NextRequest) => {
 
     await prisma.prompt.create({
       data: {
-        value: assistantReply!,
+        value: responseText!,
         projectId: projectId,
         type: PromptType.SYSTEM,
         videoUrl: url,
@@ -92,11 +109,11 @@ export const POST = async (req: NextRequest) => {
     });
 
     return NextResponse.json({
-      reply: assistantReply,
+      reply: responseText,
       url,
       code,
-      llmResponse: assistantReply,
-    })
+      llmResponse: responseText,
+    });
   } catch (error) {
     console.error("Error in chat API:", error);
     return NextResponse.json(

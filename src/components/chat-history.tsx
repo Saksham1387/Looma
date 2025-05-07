@@ -141,7 +141,7 @@ export const ChatHistory = ({
                               {prompt.value}
                             </div>
                           ) : (
-                            <div className="text-slate-300 space-y-4 text-sm">
+                            <div className="text-slate-300 space-y-4 text-sm ">
                               <SystemResponse
                                 content={prompt.value}
                                 promptId={prompt.id}
@@ -192,10 +192,12 @@ export const ChatHistory = ({
       </div>
 
       <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#0f0f0f] via-[#0f0f0f]/60 to-transparent pointer-events-none z-10" />
+      <p className="text-xs text-gray-500 text-start pl-5 pt-5">*The responses can be bad</p>
       <div
         className={`p-4 py-5 sticky bottom-0 transition-shadow duration-200 shadow-3xl z-20`}
       >
         <div className="flex flex-row gap-2 items-center rounded-xl bg-[#181818] border border-neutral-900 px-3 py-5">
+         
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -222,6 +224,8 @@ export const ChatHistory = ({
               </span>
             )}
           </Button>
+         
+         
         </div>
       </div>
     </div>

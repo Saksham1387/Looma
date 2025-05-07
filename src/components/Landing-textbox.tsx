@@ -6,6 +6,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useSession } from "next-auth/react";
 
 export const LandingTextBox = () => {
   const router = useRouter();
@@ -15,6 +16,7 @@ export const LandingTextBox = () => {
   const [selectedModel, setSelectedModel] = useState("OpenAI");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const {data:session}  = useSession();
 
   const placeholders = [
     "Create a smooth character walk cycle animation...",
@@ -63,6 +65,10 @@ export const LandingTextBox = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    if(!session){
+      toast.error("Please Login to use Looma");
+      return;
+    }
     e.preventDefault();
     try {
       const res = await axios.post("/api/project", {
