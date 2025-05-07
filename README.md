@@ -1,7 +1,7 @@
 
 ![Collab Draw Banner](https://gold-legislative-tuna-190.mypinata.cloud/ipfs/bafybeieazrhmh35u7dlnnxbtpuvocacisqgmsznupv3af32dv6yh6cmm7e)
 
-![Looma Logo](public/logo (1).png) # Looma
+# Looma
 
 **Looma** is a web application that lets you **generate stunning animations just by describing them in natural language**. Powered by [Manim](https://docs.manim.community/) under the hood, Looma translates your prompt into Python animation code, renders it using a backend worker, and delivers a playable video — all in one seamless flow.
 
