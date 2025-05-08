@@ -5,6 +5,7 @@ import { LandingTextBox } from "./Landing-textbox";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { Github, Twitter } from "lucide-react";
 import Link from "next/link";
+
 export default function Landing() {
   const containerVariants = {
     initial: {},
