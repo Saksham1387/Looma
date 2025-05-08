@@ -23,12 +23,13 @@ class RedisQueue:
             decode_responses=True
         )
         
-    def enqueue_task(self,code:str,scene_name:Optional[str] = None,webhook_url:Optional[str] = None) -> str:
+    def enqueue_task(self,code:str,prompt_id:str,scene_name:Optional[str] = None,webhook_url:Optional[str] = None) -> str:
         task_id = str(uuid.uuid4())
         
         task = Task(
                 id=task_id,
                 code = code,
+                prompt_id=prompt_id,
                 scene_name= scene_name,
                 webhook_url=webhook_url,
                 status= TaskStatus.PENDING

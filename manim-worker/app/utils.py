@@ -16,7 +16,25 @@ from .config import (
     WEBHOOK_ENABLED,
     WEBHOOK_URL
 )
+from prisma import Prisma
 
+async def put_in_db(video_url:str,prompt_id:str) -> bool:
+    db = Prisma()
+    await db.connect()
+
+    
+    print(db)
+    try:
+        edit_prompt = await db.prompt.update(where={"id":prompt_id},data={
+            "videoUrl":video_url
+        })
+        await db.disconnect()
+        return True
+    except Exception as e:  
+        print(f"Error occurred in db call: {str(e)}")
+        await db.disconnect()
+        return False
+    
 
 def extract_scene_name(code: str) -> Optional[str]:
     """Extract the first class name that inherits from Scene from the Manim code."""
@@ -35,27 +53,23 @@ def validate_manim_code(code: str) -> Tuple[bool, Optional[str]]:
         return False, error_message
 
 def create_temp_file(code):
-    """Create a temporary file containing the Manim code."""
-    # Ensure temp directory exists
     os.makedirs(TEMP_DIR, exist_ok=True)
-    
-    # Create unique filename
-    file_id = str(uuid.uuid4()).replace('-', '')
+     
+    file_id = str(uuid.uuid4().hex)  
     file_path = os.path.join(TEMP_DIR, f"{file_id}.py")
     
-    # Write file with explicit flush and close
+    file_path = os.path.abspath(file_path)
+    
     with open(file_path, 'w') as f:
         f.write(code)
         f.flush()
-        os.fsync(f.fileno())  # Force write to disk
-    
-    # Ensure file is readable and exists before returning
+        os.fsync(f.fileno())  
+
+    os.chmod(file_path, 0o644)      
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Failed to create temp file at {file_path}")
     
-    # Small delay to ensure file system has fully registered the file
-    time.sleep(0.1)
-    
+    time.sleep(0.5)    
     return file_path
 
 

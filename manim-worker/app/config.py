@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-
+from pathlib import Path
 load_dotenv()
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
@@ -24,5 +24,10 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL", "")
 
 NUM_WORKERS = int(os.getenv("NUM_WORKERS", 2))
 
-TEMP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "temp"))
+# TEMP_DIR = "temp"
 MEDIA_DIR = "media"
+
+PROJECT_ROOT = Path(__file__).parent.parent.absolute()
+
+# Define TEMP_DIR as an absolute path
+TEMP_DIR = os.path.join(PROJECT_ROOT, "temp")

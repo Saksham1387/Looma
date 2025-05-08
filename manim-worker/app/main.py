@@ -5,10 +5,10 @@ import os
 import shutil
 from contextlib import asynccontextmanager
 
-from .models import ManimCode, TaskResponse, TaskStatusResponse
-from .task_queue import queue
-from .utils import validate_manim_code
-from .config import FRONTEND_URL, TEMP_DIR
+from app.models import ManimCode, TaskResponse, TaskStatusResponse
+from app.task_queue import queue
+from app.utils import validate_manim_code
+from app.config import FRONTEND_URL, TEMP_DIR
 
 
 @asynccontextmanager
@@ -40,6 +40,7 @@ async def create_render_task(data: ManimCode):
     # Enqueue the task in Redis
     task_id = queue.enqueue_task(
         code=data.code,
+        prompt_id=data.prompt_id,
         scene_name=data.scene_name,
         webhook_url=data.webhook_url
     )

@@ -1,4 +1,3 @@
-
 import os
 import time
 import subprocess
@@ -6,19 +5,20 @@ import traceback
 import logging
 import argparse
 from threading import Thread
-from task_queue import queue
-
-
-from models import TaskStatus
-from utils import (
+from .task_queue import queue
+from .models import TaskStatus
+from .utils import (
     extract_scene_name,
     create_temp_file,
     upload_to_s3,
     cleanup_files,
-    notify_task_completion
+    notify_task_completion,
+    put_in_db
 )
-from config import MEDIA_DIR, NUM_WORKERS
-
+from .config import MEDIA_DIR, NUM_WORKERS
+import sys
+from pathlib import Path
+import asyncio
 
 logging.basicConfig(
     level=logging.INFO,
@@ -27,10 +27,10 @@ logging.basicConfig(
 
 logger = logging.getLogger("manim-worker")
 
-
-def process_task(task):
+async def process_task(task):
     task_id = task.id
     code = task.code
+    prompt_id = task.prompt_id
     scene_name = task.scene_name
     webhook_url = task.webhook_url
     file_path = None
@@ -131,6 +131,18 @@ def process_task(task):
             )
             return
         logger.info(f"Video uploaded to {result_or_error}")
+        db_res = await put_in_db(result_or_error,prompt_id)
+        
+        if not db_res:
+            logger.error("Db Error occured")
+            queue.update_task_status(task_id, TaskStatus.FAILED, error="Db error")
+            notify_task_completion(
+                task_id=task_id,
+                status="failed",
+                error=result_or_error,
+                webhook_url=webhook_url
+            )
+            return
         
         # Update task status and result
         queue.update_task_status(
@@ -171,37 +183,34 @@ def process_task(task):
             webhook_url=webhook_url
         )
         
-    # finally:
-    #     # Clean up files
-    #     cleanup_files([file_path, video_path])
+    finally:
+        # Clean up files
+        cleanup_files([file_path, video_path])
 
-
-
-
-
-
-
-
-def worker_loop():
+async def worker_loop():
     while True:
         try:
             task = queue.wait_for_task()
             
             if task:
-                process_task(task)
+                await process_task(task)
             
         except Exception as e:
             logger.error(f"Error in worker loop: {str(e)}")
             logger.error(traceback.format_exc())
             
             time.sleep(1)
-            
-def start_workers(num_workers):
+
+def run_worker_loop():
+    asyncio.run(worker_loop())
+
+
+async def start_workers(num_workers):
     logger.info(f"Starting {num_workers} worker threads")
     
     for i in range(num_workers):
         worker_thread = Thread(
-            target=worker_loop,
+            target=run_worker_loop,
             name=f"worker-{i}",
             daemon=True
         )
@@ -209,17 +218,6 @@ def start_workers(num_workers):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Manim rendering worker")
-    parser.add_argument("--workers", type=int, default=NUM_WORKERS,
-                        help="Number of worker threads to start")
-    args = parser.parse_args()
-    
-    os.makedirs("temp", exist_ok=True)
-    
-    start_workers(args.workers)
-    
-    try:
-        while True:
-            time.sleep(60)
-    except KeyboardInterrupt:
-        logger.info("Shutting down workers...")
+    current_dir = Path(__file__).parent
+    parent_dir = current_dir.parent
+    sys.path.append(str(parent_dir))
