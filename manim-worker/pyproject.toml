@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115.12",
+    "prisma>=0.15.0",
     "pydantic>=2.11.4",
     "redis>=6.0.0",
     "uuid>=1.30",

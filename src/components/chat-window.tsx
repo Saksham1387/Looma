@@ -3,7 +3,6 @@ import { usePrompts } from "@/app/hooks/usePrompts";
 import type React from "react";
 import axios from "axios";
 import { useState, useEffect } from "react";
-import { ChatErrorCard } from "./chat-error-card";
 import { LLMResponseLoading } from "./llm-response-loading";
 import { VideoCard } from "./video-card";
 import { ChatHeader } from "./chat-header";
@@ -24,10 +23,12 @@ const Chatpage = ({ id }: Props) => {
   const [loading, setLoading] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [error, setError] = useState<ErrorResponse | null>(null);
-  const { refetchPrompts, addPrompt,prompts } = usePrompts(id);
+  const { refetchPrompts, addPrompt, prompts } = usePrompts(id);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
-
+  const [taskId, setTaskId] = useState("");
+  const [loadingVideo, setLoadingVideo] = useState(false);
+  
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
@@ -54,55 +55,6 @@ const Chatpage = ({ id }: Props) => {
     };
   }, [loading, progress]);
 
-  // const handleSendPrompt = async (
-  //   promptValue?: string,
-  //   model?: string | null
-  // ) => {
-  //   const promptToSend = promptValue;
-  //   if (!promptToSend?.trim()) return;
-
-  //   setLoading(true);
-  //   setError(null);
-  //   setVideoUrl(null);
-
-  //   try {
-  //     const promptResponse = await axios.post(`/api/prompt`, {
-  //       prompt: promptToSend,
-  //       projectId: id,
-  //       model: model || undefined,
-  //     });
-
-  //     const manimCode = promptResponse.data.code;
-  //     setVideoUrl(promptResponse.data.url);
-
-  //     if (!manimCode) {
-  //       throw new Error("No Manim code returned from /api/prompt");
-  //     }
-  //   } catch (err) {
-  //     console.error("Error:", err);
-
-  //     if (axios.isAxiosError(err) && err.response?.data) {
-  //       const errorData = err.response.data;
-
-  //       if (typeof errorData === "object" && errorData.error) {
-  //         setError(errorData as ErrorResponse);
-  //       } else {
-  //         setError({
-  //           error:
-  //             errorData.error || "Failed to process prompt or generate video",
-  //         });
-  //       }
-  //     } else {
-  //       setError({
-  //         error: "An unexpected error occurred",
-  //       });
-  //     }
-  //   } finally {
-  //     setLoading(false);
-  //     refetchPrompts();
-  //   }
-  // };
-
   const handleSendPrompt = async (
     promptValue?: string,
     model?: string | null
@@ -112,10 +64,8 @@ const Chatpage = ({ id }: Props) => {
   
     setLoading(true);
     setError(null);
-    setVideoUrl(null);
-  
+
     try {
-      // Add the user prompt to the UI immediately (optimistic update)
       const tempPromptId = `temp-${Date.now()}`;
       const userPrompt: Prompt = {
         id: tempPromptId,
@@ -125,9 +75,8 @@ const Chatpage = ({ id }: Props) => {
         videoUrl: "",
       };
       
-      // Add to local state immediately
       addPrompt(userPrompt);
-  
+
       const promptResponse = await axios.post(`/api/prompt`, {
         prompt: promptToSend,
         projectId: id,
@@ -138,14 +87,10 @@ const Chatpage = ({ id }: Props) => {
       const videoUrl = promptResponse.data.url;
       
       setVideoUrl(videoUrl);
-  
-      // Add the system response with the video URL
+      setTaskId(promptResponse.data.taskId);
+
       if (promptResponse.data.promptId) {
-        // If the API returns a promptId, we have a proper record in the database
-        // Refresh all prompts to get the complete and accurate state
         await refetchPrompts();
-        
-        // Select the newly created prompt
         setSelectedChatId(promptResponse.data.promptId);
       }
   
@@ -178,6 +123,54 @@ const Chatpage = ({ id }: Props) => {
     }
   };
 
+  const getVideoUrl = async () => {
+    if (taskId !== "") {
+      setLoadingVideo(true);
+      try {
+        const res = await axios.get(`http://localhost:8000/api/task/${taskId}`);
+        console.log(res.data.status);
+        if (res.data.status === "failed"){
+          setError(res.data.error);
+          setLoadingVideo(false);
+          return true;
+        }
+        if (res.data.error == null && res.data.result?.video_url) {
+          setVideoUrl(res.data.result.video_url);
+          setLoadingVideo(false);
+          return true; 
+        }
+      } catch (error) {
+        console.error("Error fetching video URL:", error);
+        setLoadingVideo(false);
+      }
+      return false; 
+    }
+    return false;
+  };
+
+  // Poll the FAST API BE
+  useEffect(() => {
+    if (!taskId || videoUrl) return; 
+    
+    const interval = 5000;
+    let timer: NodeJS.Timeout;
+    
+    const checkForVideo = async () => {
+      const gotVideo = await getVideoUrl();
+      if (gotVideo) {
+        clearInterval(timer);
+      }
+    };
+
+    checkForVideo();
+
+    timer = setInterval(checkForVideo, interval);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, [taskId, videoUrl]);
+
   const handleChatClick = (promptId: string, promptVideoUrl: string) => {
     setSelectedChatId(promptId);
     setVideoUrl(promptVideoUrl);
@@ -189,7 +182,7 @@ const Chatpage = ({ id }: Props) => {
       <ChatHeader />
       <div className="flex flex-1 overflow-hidden ">
         <ChatHistory
-        prompts={prompts}
+          prompts={prompts}
           id={id}
           onChatSelect={handleChatClick}
           loading={loading}
@@ -199,18 +192,18 @@ const Chatpage = ({ id }: Props) => {
         <div className="w-full flex rounded-3xl p-5">
           <div className="w-full flex flex-col bg-neutral-950 relative rounded-3xl py-3">
             <div className="flex-1 overflow-y-auto p-6 ">
-              {loading && (
+              {loadingVideo && (
                 <div className="flex items-center justify-center ">
                   <LLMResponseLoading />
                 </div>
               )}
 
-              {error && <ChatErrorCard error={error} />}
+              {/* {error && <ChatErrorCard error={error} />} */}
 
               <div className="flex items-center justify-center min-h-[400px]">
                 {videoUrl ? (
                   <VideoCard videoUrl={videoUrl} />
-                ) : !loading && !error ? (
+                ) : !loadingVideo && !error ? (
                   <div>
                     <ChatLayoutCard />
                   </div>

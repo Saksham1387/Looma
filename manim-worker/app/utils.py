@@ -6,17 +6,68 @@ import boto3
 import requests
 from botocore.exceptions import ClientError
 from typing import Optional, Tuple, Dict, Any
-import time
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import QueuePool
 from .config import (
     AWS_ACCESS_KEY_ID,
     AWS_SECRET_ACCESS_KEY,
     AWS_REGION,
     AWS_S3_BUCKET_NAME,
-    TEMP_DIR,
     WEBHOOK_ENABLED,
-    WEBHOOK_URL
+    WEBHOOK_URL,
+    DATABASE_URL
 )
+import logging
+import os
 
+logger = logging.getLogger("manim-worker")
+
+
+engine = create_engine(
+    DATABASE_URL,
+    poolclass=QueuePool,
+    pool_size=5,
+    max_overflow=10,
+    pool_timeout=30,
+    pool_pre_ping=True,
+    connect_args={
+        "application_name": "manim_worker",
+        "options": "-c statement_timeout=60000 -c client_encoding=utf8"  
+    }
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def put_in_db(video_url, prompt_id):
+    """
+    Store the video URL in the database using SQLAlchemy
+    """
+    logger.info("Putting in db")
+    try:
+        
+        db = SessionLocal()
+        try:
+            
+            update_query = text("""
+                UPDATE public."Prompt" 
+                SET "videoUrl" = :video_url 
+                WHERE id = :prompt_id
+            """)
+            db.execute(update_query, {"video_url": video_url, "prompt_id": prompt_id})
+            db.commit()
+            
+            logger.info(f"Successfully updated prompt {prompt_id} with video URL {video_url}")
+            return True
+            
+        except Exception as e:
+            db.rollback()
+            raise e
+        finally:
+            db.close()
+            
+    except Exception as e:
+        logger.error(f"Database error: {str(e)}")
+        return False
 
 def extract_scene_name(code: str) -> Optional[str]:
     """Extract the first class name that inherits from Scene from the Manim code."""
@@ -35,28 +86,33 @@ def validate_manim_code(code: str) -> Tuple[bool, Optional[str]]:
         return False, error_message
 
 def create_temp_file(code):
-    """Create a temporary file containing the Manim code."""
-    # Ensure temp directory exists
-    os.makedirs(TEMP_DIR, exist_ok=True)
+    """Create a temporary file with the provided code and ensure it exists"""
+    temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "temp")
     
-    # Create unique filename
-    file_id = str(uuid.uuid4()).replace('-', '')
-    file_path = os.path.join(TEMP_DIR, f"{file_id}.py")
+    os.makedirs(temp_dir, exist_ok=True)
     
-    # Write file with explicit flush and close
-    with open(file_path, 'w') as f:
-        f.write(code)
-        f.flush()
-        os.fsync(f.fileno())  # Force write to disk
+    filename = f"{uuid.uuid4().hex}.py"
+    file_path = os.path.join(temp_dir, filename)
     
-    # Ensure file is readable and exists before returning
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Failed to create temp file at {file_path}")
-    
-    # Small delay to ensure file system has fully registered the file
-    time.sleep(0.1)
-    
-    return file_path
+    try:
+        
+        with open(file_path, 'w') as f:
+            f.write(code)
+            f.flush()
+            os.fsync(f.fileno())  
+            
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File not found after creation: {file_path}")
+        
+        if os.path.getsize(file_path) == 0:
+            raise IOError(f"File was created but contains no data: {file_path}")
+            
+        logger.info(f"Created temporary file at {file_path}")
+        return file_path
+        
+    except Exception as e:
+        logger.error(f"Error creating temporary file: {str(e)}")
+        raise
 
 
 def upload_to_s3(file_path: str, content_type: str = "video/mp4") -> Tuple[bool, str]:

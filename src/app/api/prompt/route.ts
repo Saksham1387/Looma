@@ -5,8 +5,8 @@ import { SystemPrompt } from "@/lib/prompt";
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
+import { generateText } from 'ai';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -45,16 +45,14 @@ export const POST = async (req: NextRequest) => {
     }
 
     let responseText;
-    
-    if (model === "Gemini") {
+    const model1 = "Gemini";
+    if (model1 === "Gemini") {
       const { text } = await generateText({
-        model: google("models/gemini-2.5-pro-exp-03-25"),
+        model: google("models/gemini-2.0-flash"),
         prompt: prompt,
-        system:SystemPrompt
+        system: SystemPrompt,
       });
-      responseText = text;
-      console.log("responseText-----");
-      console.log(responseText);
+      responseText = text
     } else {
       const response = await openai.chat.completions.create({
         model: "gpt-4.1-2025-04-14",
@@ -66,21 +64,37 @@ export const POST = async (req: NextRequest) => {
       });
       const assistantReply = response.choices[0].message.content;
       responseText = assistantReply;
-      console.log("responseText-----");
-      console.log(responseText);
     }
 
     const code = extractPythonCode(responseText!);
 
+    const llmPrompt = await prisma.prompt.create({
+      data: {
+        value: responseText!,
+        projectId: projectId,
+        type: PromptType.SYSTEM,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+
     let fastApiResponse;
     try {
-      fastApiResponse = await axios.post(process.env.WORKER_URL!, {
+      fastApiResponse = await axios.post(`http://0.0.0.0:8000/api/render`, {
         code,
+        prompt_id: llmPrompt.id,
       });
     } catch (e) {
+      // If the FAST API failed then just remove both the prompts
       await prisma.prompt.delete({
         where: {
           id: userPrompt.id,
+        },
+      });
+
+      await prisma.prompt.delete({
+        where: {
+          id: llmPrompt.id,
         },
       });
       return NextResponse.json({
@@ -88,31 +102,10 @@ export const POST = async (req: NextRequest) => {
       });
     }
 
-    const url = fastApiResponse.data.videoUrl;
-
-    await prisma.prompt.update({
-      where: {
-        id: userPrompt.id,
-      },
-      data: {
-        videoUrl: url,
-      },
-    });
-
-    await prisma.prompt.create({
-      data: {
-        value: responseText!,
-        projectId: projectId,
-        type: PromptType.SYSTEM,
-        videoUrl: url,
-      },
-    });
-
     return NextResponse.json({
       reply: responseText,
-      url,
-      code,
       llmResponse: responseText,
+      taskId: fastApiResponse.data.task_id,
     });
   } catch (error) {
     console.error("Error in chat API:", error);

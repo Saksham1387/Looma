@@ -1,45 +1,58 @@
-
 import os
-import time
 import subprocess
 import traceback
 import logging
-import argparse
 from threading import Thread
-from task_queue import queue
+from celery import Celery
 
-
-from models import TaskStatus
-from utils import (
+from .models import TaskStatus
+from .utils import (
     extract_scene_name,
     create_temp_file,
     upload_to_s3,
     cleanup_files,
-    notify_task_completion
+    notify_task_completion,
+    put_in_db
 )
-from config import MEDIA_DIR, NUM_WORKERS
-
+from .config import (
+    MEDIA_DIR, 
+    REDIS_HOST, 
+    REDIS_PORT, 
+    REDIS_DB, 
+    REDIS_PASSWORD,
+)
+import json
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
+app = Celery("manim-worker")
+
+app.conf.broker_url = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+app.conf.result_backend = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+
+app.conf.task_track_started = True
+app.conf.task_time_limit = 300  
+app.conf.worker_prefetch_multiplier = 1  
+app.conf.task_acks_late = True 
+
 logger = logging.getLogger("manim-worker")
 
+# Import here to avoid circular imports
+from .task_queue import queue
 
-def process_task(task):
-    task_id = task.id
-    code = task.code
-    scene_name = task.scene_name
-    webhook_url = task.webhook_url
+@app.task(bind=True)
+def process_manim_task(self, task_id, code, prompt_id, scene_name=None, webhook_url=None):
+    """Process a Manim rendering task using Celery"""
     file_path = None
     video_path = None
 
     try:
         logger.info(f"Starting Manim rendering task {task_id}")
-        
-        queue.update_task_status(task_id,TaskStatus.PROCESSING)
+    
+        queue.update_task_status(task_id, TaskStatus.PROCESSING)
         
         if not scene_name:
             scene_name = extract_scene_name(code)
@@ -54,6 +67,7 @@ def process_task(task):
                     webhook_url=webhook_url
                 )
                 return
+        
         try:
             file_path = create_temp_file(code)
             logger.info(f"Created temporary file at {file_path}")
@@ -73,11 +87,6 @@ def process_task(task):
                 webhook_url=webhook_url
             )
             return
-        # file_path = create_temp_file(code)
-        # logger.info(f"Created temporary file at {file_path}")
-        
-        # logger.info(f"Running Manim for scene: {scene_name}")
-        
         
         result = subprocess.run(
             ["manim", "-ql", file_path, scene_name],
@@ -104,7 +113,6 @@ def process_task(task):
             # Try alternative path
             video_path = os.path.join("media", "videos", "main", "480p15", video_file)
             
-        
         if not os.path.exists(video_path):
             error_message = f"Video file not found after successful rendering"
             logger.error(error_message)
@@ -130,23 +138,40 @@ def process_task(task):
                 webhook_url=webhook_url
             )
             return
+            
         logger.info(f"Video uploaded to {result_or_error}")
         
-        # Update task status and result
+        # Update database with video URL
+        logger.info("Attempting to update database with video URL")
+        db_res = put_in_db(result_or_error, prompt_id)
+        
+        if not db_res:
+            logger.error("Database update failed")
+            queue.update_task_status(task_id, TaskStatus.FAILED, error="Database error")
+            notify_task_completion(
+                task_id=task_id,
+                status="failed",
+                error="Database error",
+                webhook_url=webhook_url
+            )
+            return
+        
+        logger.info("Database update successful")
+        
+        logger.info("Updating task status and result")
         queue.update_task_status(
             task_id, 
             TaskStatus.COMPLETED, 
             result={"video_url": result_or_error}
         )
-        
-        # Send webhook notification if configured
+        logger.info("Task status and result updated successfully")
+
         notify_task_completion(
             task_id=task_id,
             status="completed",
             result={"video_url": result_or_error},
             webhook_url=webhook_url
         )
-        
         
     except subprocess.TimeoutExpired:
         error_msg = "Manim execution timed out"
@@ -171,55 +196,17 @@ def process_task(task):
             webhook_url=webhook_url
         )
         
-    # finally:
-    #     # Clean up files
-    #     cleanup_files([file_path, video_path])
+    finally:
+        # Clean up files
+        cleanup_files([file_path, video_path])
 
 
-
-
-
-
-
-
-def worker_loop():
-    while True:
-        try:
-            task = queue.wait_for_task()
-            
-            if task:
-                process_task(task)
-            
-        except Exception as e:
-            logger.error(f"Error in worker loop: {str(e)}")
-            logger.error(traceback.format_exc())
-            
-            time.sleep(1)
-            
-def start_workers(num_workers):
-    logger.info(f"Starting {num_workers} worker threads")
+def start_worker():
+    from celery.bin import worker
     
-    for i in range(num_workers):
-        worker_thread = Thread(
-            target=worker_loop,
-            name=f"worker-{i}",
-            daemon=True
-        )
-        worker_thread.start()
-
-
+    worker = worker.worker(app=app)
+    worker.run(concurrency=1,loglevel="INFO")
+    
+    
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Manim rendering worker")
-    parser.add_argument("--workers", type=int, default=NUM_WORKERS,
-                        help="Number of worker threads to start")
-    args = parser.parse_args()
-    
-    os.makedirs("temp", exist_ok=True)
-    
-    start_workers(args.workers)
-    
-    try:
-        while True:
-            time.sleep(60)
-    except KeyboardInterrupt:
-        logger.info("Shutting down workers...")
+    start_worker()
