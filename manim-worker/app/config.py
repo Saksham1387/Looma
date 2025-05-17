@@ -31,3 +31,6 @@ PROJECT_ROOT = Path(__file__).parent.parent.absolute()
 
 # Define TEMP_DIR as an absolute path
 TEMP_DIR = os.path.join(PROJECT_ROOT, "temp")
+
+DATABASE_URL = os.getenv("DATABASE_URL_WORKER")
+

@@ -1,21 +1,155 @@
-from redis import Redis
+# from redis import Redis
+# from .config import (
+#     REDIS_HOST, 
+#     REDIS_PORT, 
+#     REDIS_DB, 
+#     REDIS_PASSWORD,
+#     TASK_CHANNEL
+# )
+# from typing import Optional, Dict, Any
+# import uuid
+# from .models import Task, TaskStatus
+# import json
+
+# class CeleryRedisQueue:
+#     def __init__(self):
+#         self.redis = Redis(
+#             host=REDIS_HOST,
+#             port=REDIS_PORT,
+#             db=REDIS_DB,
+#             password=REDIS_PASSWORD,
+#             decode_responses=True
+#         )
+        
+#     def enqueue_task(self, code: str, prompt_id: str, scene_name: Optional[str] = None, webhook_url: Optional[str] = None) -> str:
+#         """Enqueue a task for Celery processing and store task info in Redis"""
+#         task_id = str(uuid.uuid4())
+        
+#         # Store initial task data in Redis
+#         task = Task(
+#             id=task_id,
+#             code=code,
+#             prompt_id=prompt_id,
+#             scene_name=scene_name,
+#             webhook_url=webhook_url,
+#             status=TaskStatus.PENDING
+#         )
+        
+#         # Store task data in Redis
+#         self.redis.hset(f"task:{task_id}", mapping={
+#             "code": code,
+#             "prompt_id": prompt_id,
+#             "scene_name": scene_name if scene_name else "",
+#             "webhook_url": webhook_url if webhook_url else "",
+#             "status": TaskStatus.PENDING
+#         })
+        
+#         # Publish that a new task was added
+#         self.redis.publish(TASK_CHANNEL, json.dumps({
+#             "type": "task_added",
+#             "task_id": task_id
+#         }))
+        
+#         # Import Celery task only when needed to avoid circular import
+#         from .worker import process_manim_task
+#         # Submit the task to Celery
+#         process_manim_task.delay(task_id, code, prompt_id, scene_name, webhook_url)
+        
+#         return task_id
+    
+#     def get_task(self, task_id: str) -> Optional[Task]:
+#         """Get task data from Redis"""
+#         task_data = self.redis.hgetall(f"task:{task_id}")
+        
+#         if not task_data:
+#             return None
+        
+#         # Process fields that might be JSON
+#         result = None
+#         if "result" in task_data:
+#             try:
+#                 result = json.loads(task_data["result"])
+#             except json.JSONDecodeError:
+#                 result = task_data["result"]
+        
+#         # Convert back to Task model
+#         return Task(
+#             id=task_id,
+#             code=task_data.get("code", ""),
+#             prompt_id=task_data.get("prompt_id", ""),
+#             scene_name=task_data.get("scene_name", ""),
+#             webhook_url=task_data.get("webhook_url", ""),
+#             status=task_data.get("status", TaskStatus.PENDING),
+#             result=result,
+#             error=task_data.get("error")
+#         )
+    
+#     def update_task_status(self, task_id: str, status: str, 
+#                           result: Optional[Dict[str, Any]] = None, 
+#                           error: Optional[str] = None) -> bool:
+#         """Update task status in Redis"""
+#         if not self.redis.exists(f"task:{task_id}"):
+#             return False
+        
+#         update_data = {"status": status}
+        
+#         if result is not None:
+#             update_data["result"] = json.dumps(result)
+        
+#         if error is not None:
+#             update_data["error"] = error
+        
+#         self.redis.hset(f"task:{task_id}", mapping=update_data)
+        
+#         # Also publish an update message
+#         self.redis.publish(TASK_CHANNEL, json.dumps({
+#             "type": "status_update",
+#             "task_id": task_id,
+#             "status": status
+#         }))
+        
+#         return True
+    
+#     def clean_old_tasks(self, max_tasks: int = 1000) -> int:
+#         """Clean up old tasks from Redis"""
+#         # Get all task keys
+#         task_keys = self.redis.keys("task:*")
+        
+#         if len(task_keys) <= max_tasks:
+#             return 0
+        
+#         # Sort by creation time if available or just take the first ones
+#         to_remove = len(task_keys) - max_tasks
+#         keys_to_remove = task_keys[:to_remove]
+        
+#         removed = 0
+#         for key in keys_to_remove:
+#             self.redis.delete(key)
+#             removed += 1
+        
+#         return removed
+
+# # Create a singleton instance
+# queue = CeleryRedisQueue()
+
+
+
+import redis
 from .config import (
     REDIS_HOST, 
     REDIS_PORT, 
     REDIS_DB, 
     REDIS_PASSWORD,
-    TASK_QUEUE,
-    RESULT_HASH,
     TASK_CHANNEL
 )
-from typing import Optional , Dict,Any
+from typing import Optional, Dict, Any
 import uuid
-from .models import Task,TaskStatus
-import json 
+from .models import Task, TaskStatus
+import json
 
-class RedisQueue:
+class CeleryRedisQueue:
     def __init__(self):
-        self.redis = Redis(
+        self.redis = redis.Redis(
             host=REDIS_HOST,
             port=REDIS_PORT,
             db=REDIS_DB,
@@ -23,73 +157,87 @@ class RedisQueue:
             decode_responses=True
         )
         
-    def enqueue_task(self,code:str,prompt_id:str,scene_name:Optional[str] = None,webhook_url:Optional[str] = None) -> str:
+    def enqueue_task(self, code: str, prompt_id: str, scene_name: Optional[str] = None, webhook_url: Optional[str] = None) -> str:
+        """Enqueue a task for Celery processing and store task info in Redis"""
         task_id = str(uuid.uuid4())
         
+        # Store initial task data in Redis
         task = Task(
-                id=task_id,
-                code = code,
-                prompt_id=prompt_id,
-                scene_name= scene_name,
-                webhook_url=webhook_url,
-                status= TaskStatus.PENDING
-            )
+            id=task_id,
+            code=code,
+            prompt_id=prompt_id,
+            scene_name=scene_name,
+            webhook_url=webhook_url,
+            status=TaskStatus.PENDING
+        )
         
-        self.redis.hset(RESULT_HASH,task_id,task.to_json())
-        self.redis.lpush(TASK_QUEUE,task_id)
+        # Store task data in Redis
+        self.redis.hset(f"task:{task_id}", mapping={
+            "code": code,
+            "prompt_id": prompt_id,
+            "scene_name": scene_name if scene_name else "",
+            "webhook_url": webhook_url if webhook_url else "",
+            "status": TaskStatus.PENDING
+        })
         
+        # Publish that a new task was added
         self.redis.publish(TASK_CHANNEL, json.dumps({
             "type": "task_added",
             "task_id": task_id
         }))
         
+        # Import Celery task only when needed to avoid circular import
+        from .worker import process_manim_task
+        # Submit the task to Celery
+        process_manim_task.delay(task_id, code, prompt_id, scene_name, webhook_url)
+        
         return task_id
     
+    def get_task(self, task_id: str) -> Optional[Task]:
+        """Get task data from Redis"""
+        task_data = self.redis.hgetall(f"task:{task_id}")
+        
+        if not task_data:
+            return None
+        
+        # Process fields that might be JSON
+        result = None
+        if "result" in task_data:
+            try:
+                result = json.loads(task_data["result"])
+            except json.JSONDecodeError:
+                result = task_data["result"]
+        
+        # Convert back to Task model
+        return Task(
+            id=task_id,
+            code=task_data.get("code", ""),
+            prompt_id=task_data.get("prompt_id", ""),
+            scene_name=task_data.get("scene_name", ""),
+            webhook_url=task_data.get("webhook_url", ""),
+            status=task_data.get("status", TaskStatus.PENDING),
+            result=result,
+            error=task_data.get("error")
+        )
     
-    def get_task(self,task_id:str) -> Optional[Task]:
-        task_json = self.redis.hget(RESULT_HASH,task_id)
-        
-        if task_id:
-            return Task.from_json(task_json)
-        
-        return None
-        
-    def get_next_task(self) -> Optional[Task]:
-        task_id = self.redis.rpop(TASK_QUEUE)
-        if task_id:
-            task_json = self.redis.hget(RESULT_HASH,task_id)
-            if task_json:
-                return Task.from_json(task_json)
-        return None
-    
-    def wait_for_task(self,timeout: int = 0) -> Optional[Task]:
-        result = self.redis.brpop(TASK_QUEUE,timeout)
-        if result:
-            _,task_id = result
-            task_json = self.redis.hget(RESULT_HASH, task_id)
-            if task_json:
-                return Task.from_json(task_json)
-        return None
-    
-    def update_task_status(self, task_id: str, status: TaskStatus, 
-                           result: Optional[Dict[str, Any]] = None, 
-                           error: Optional[str] = None) -> bool:
-        
-        task_json = self.redis.hget(RESULT_HASH, task_id)
-        if not task_json:
+    def update_task_status(self, task_id: str, status: str, 
+                          result: Optional[Dict[str, Any]] = None, 
+                          error: Optional[str] = None) -> bool:
+        """Update task status in Redis"""
+        if not self.redis.exists(f"task:{task_id}"):
             return False
         
-        task = Task.from_json(task_json)
-        task.status = status
+        update_data = {"status": status}
         
         if result is not None:
-            task.result = result
+            update_data["result"] = json.dumps(result)
         
         if error is not None:
-            task.error = error
+            update_data["error"] = error
         
-        self.redis.hset(RESULT_HASH, task_id, task.to_json())
+        self.redis.hset(f"task:{task_id}", mapping=update_data)
         
+        # Also publish an update message
         self.redis.publish(TASK_CHANNEL, json.dumps({
             "type": "status_update",
             "task_id": task_id,
@@ -99,18 +247,23 @@ class RedisQueue:
         return True
     
     def clean_old_tasks(self, max_tasks: int = 1000) -> int:
-        task_ids = self.redis.hkeys(RESULT_HASH)
+        """Clean up old tasks from Redis"""
+        # Get all task keys
+        task_keys = self.redis.keys("task:*")
         
-        if len(task_ids) <= max_tasks:
+        if len(task_keys) <= max_tasks:
             return 0
         
-        to_remove = len(task_ids) - max_tasks
-
-        for i in range(to_remove):
-            if i < len(task_ids):
-                self.redis.hdel(RESULT_HASH, task_ids[i])
+        # Sort by creation time if available or just take the first ones
+        to_remove = len(task_keys) - max_tasks
+        keys_to_remove = task_keys[:to_remove]
         
-        return to_remove
-    
-    
-queue = RedisQueue()
+        removed = 0
+        for key in keys_to_remove:
+            self.redis.delete(key)
+            removed += 1
+        
+        return removed
+
+# Create a singleton instance
+queue = CeleryRedisQueue()

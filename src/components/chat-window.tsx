@@ -128,6 +128,12 @@ const Chatpage = ({ id }: Props) => {
       setLoadingVideo(true);
       try {
         const res = await axios.get(`http://localhost:8000/api/task/${taskId}`);
+        console.log(res.data.status);
+        if (res.data.status === "failed"){
+          setError(res.data.error);
+          setLoadingVideo(false);
+          return true;
+        }
         if (res.data.error == null && res.data.result?.video_url) {
           setVideoUrl(res.data.result.video_url);
           setLoadingVideo(false);
@@ -135,6 +141,7 @@ const Chatpage = ({ id }: Props) => {
         }
       } catch (error) {
         console.error("Error fetching video URL:", error);
+        setLoadingVideo(false);
       }
       return false; 
     }

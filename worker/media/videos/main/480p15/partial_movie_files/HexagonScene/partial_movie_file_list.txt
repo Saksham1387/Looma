@@ -1,4 +1,0 @@
-# This file is used internally by FFMPEG.
-file 'file:/Users/sakshamchaudhary/Documents/MyProjects/InstructAI/my-app/worker/media/videos/main/480p15/partial_movie_files/HexagonScene/1185818338_3510213750_223132457.mp4'
-file 'file:/Users/sakshamchaudhary/Documents/MyProjects/InstructAI/my-app/worker/media/videos/main/480p15/partial_movie_files/HexagonScene/624642324_4282433697_3948651264.mp4'
-file 'file:/Users/sakshamchaudhary/Documents/MyProjects/InstructAI/my-app/worker/media/videos/main/480p15/partial_movie_files/HexagonScene/624642324_2844360058_1431057796.mp4'

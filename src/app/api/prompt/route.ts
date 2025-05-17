@@ -47,9 +47,8 @@ export const POST = async (req: NextRequest) => {
     let responseText;
     const model1 = "Gemini";
     if (model1 === "Gemini") {
-
       const { text } = await generateText({
-        model: google("models/gemini-2.5-pro-exp-03-25"),
+        model: google("models/gemini-2.0-flash"),
         prompt: prompt,
         system: SystemPrompt,
       });
